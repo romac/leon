@@ -1479,25 +1479,38 @@ trait CodeExtraction extends ASTExtractors {
         case ExIsInstanceOf(tt, cc) => {
           val ccRec = extractTree(cc)
           val checkType = extractType(tt)
-          checkType match {
-            case cct @ CaseClassType(ccd, tps) => {
-              val rootType: LeonClassDef  = if(ccd.parent != None) ccd.parent.get.classDef else ccd
+          ccRec.getType match {
+            case AnyType => {
+              AnyInstanceOf(checkType, ccRec)
+            }
+            case _: ClassType => {
+              checkType match {
+                case cct @ CaseClassType(ccd, tps) => {
+                  val rootType: LeonClassDef  = if(ccd.parent != None) ccd.parent.get.classDef else ccd
 
-              if(!ccRec.getType.isInstanceOf[ClassType]) {
-                outOfSubsetError(tr, "isInstanceOf can only be used with a case class")
-              } else {
-                val testedExprType = ccRec.getType.asInstanceOf[ClassType].classDef
-                val testedExprRootType: LeonClassDef = if(testedExprType.parent != None) testedExprType.parent.get.classDef else testedExprType
+                  if(!ccRec.getType.isInstanceOf[ClassType]) {
+                    outOfSubsetError(tr, "isInstanceOf can only be used with a case class")
+                  } else {
+                    val testedExprType = ccRec.getType.asInstanceOf[ClassType].classDef
+                    val testedExprRootType: LeonClassDef = if(testedExprType.parent != None) testedExprType.parent.get.classDef else testedExprType
 
-                if(rootType != testedExprRootType) {
-                  outOfSubsetError(tr, "isInstanceOf can only be used with compatible case classes")
-                } else {
-                  CaseClassInstanceOf(cct, ccRec)
+                    if(rootType != testedExprRootType) {
+                      outOfSubsetError(tr, "isInstanceOf can only be used with compatible case classes")
+                    } else {
+                      CaseClassInstanceOf(cct, ccRec)
+                    }
+                  }
+                }
+                case AnyType => {
+                  outOfSubsetError(tr, "isInstanceOf[Any] is not supported yet")
+                }
+                case _ => {
+                  outOfSubsetError(tr, "isInstanceOf can only be used with a case class")
                 }
               }
             }
             case _ => {
-              outOfSubsetError(tr, "isInstanceOf can only be used with a case class")
+              outOfSubsetError(tr, "isInstanceOf can only be used with a case class or Any")
             }
           }
         }

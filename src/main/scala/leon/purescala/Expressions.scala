@@ -274,9 +274,12 @@ object Expressions {
     val getType = ct
   }
 
-  case class CaseClassInstanceOf(classType: CaseClassType, expr: Expr) extends Expr {
+  abstract class InstanceOfExpr(classType: TypeTree, expr: Expr) extends Expr {
     val getType = BooleanType
   }
+
+  case class CaseClassInstanceOf(classType: CaseClassType, expr: Expr) extends InstanceOfExpr(classType, expr)
+  case class AnyInstanceOf(classType: TypeTree, expr: Expr) extends InstanceOfExpr(classType, expr)
 
   object CaseClassSelector {
     def apply(classType: CaseClassType, caseClass: Expr, selector: Identifier): Expr = {
