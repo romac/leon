@@ -39,11 +39,14 @@ trait ASTExtractors {
   protected lazy val function5TraitSym  = classFromName("scala.Function5")
   protected lazy val byNameSym          = classFromName("scala.<byname>")
   protected lazy val bigIntSym          = classFromName("scala.math.BigInt")
+  protected lazy val anySym             = classFromName("scala.Any")
 
   def isTuple2(sym : Symbol) : Boolean = sym == tuple2Sym
   def isTuple3(sym : Symbol) : Boolean = sym == tuple3Sym
   def isTuple4(sym : Symbol) : Boolean = sym == tuple4Sym
   def isTuple5(sym : Symbol) : Boolean = sym == tuple5Sym
+
+  def isAnySym(sym : Symbol) : Boolean = getResolvedTypeSym(sym) == anySym
 
   def isBigIntSym(sym : Symbol) : Boolean = getResolvedTypeSym(sym) == bigIntSym
 
@@ -103,8 +106,9 @@ trait ASTExtractors {
   }
 
   def hasBigIntType(t : Tree) = isBigIntSym(t.tpe.typeSymbol)
-    
-  
+
+  def hasAnyType(t : Tree) = isAnySym(t.tpe.typeSymbol)
+
   object ExtractorHelpers {
     object ExIdNamed {
       def unapply(id: Ident): Option[String] = Some(id.toString)

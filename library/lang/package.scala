@@ -7,7 +7,10 @@ import scala.language.implicitConversions
 
 package object lang {
 
-  @library
+  @ignore
+  type ?!? = Any
+
+  @ignore
   implicit class BooleanDecorations(val underlying: Boolean) {
     def holds : Boolean = {
       assert(underlying)

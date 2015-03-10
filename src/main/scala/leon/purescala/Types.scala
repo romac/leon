@@ -43,6 +43,7 @@ object Types {
   }
 
   case object Untyped extends TypeTree
+  case object AnyType extends TypeTree
   case object BooleanType extends TypeTree
   case object UnitType extends TypeTree
   case object CharType extends TypeTree

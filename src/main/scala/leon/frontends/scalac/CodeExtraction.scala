@@ -1781,6 +1781,9 @@ trait CodeExtraction extends ASTExtractors {
     }
 
     private def extractType(tpt: Type)(implicit dctx: DefContext, pos: Position): LeonType = tpt match {
+      case tpe if tpe == AnyClass.tpe =>
+        AnyType
+
       case tpe if tpe == CharClass.tpe =>
         CharType
 
@@ -1795,6 +1798,9 @@ trait CodeExtraction extends ASTExtractors {
 
       case tpe if tpe == NothingClass.tpe =>
         Untyped
+
+      case TypeRef(_, sym, _) if isAnySym(sym) =>
+        AnyType
 
       case TypeRef(_, sym, _) if isBigIntSym(sym) =>
         IntegerType
