@@ -26,6 +26,7 @@ object Extractors {
       case CaseClassSelector(cd, e, sel) => Some((e, CaseClassSelector(cd, _, sel)))
       case CaseClassInstanceOf(cd, e) => Some((e, CaseClassInstanceOf(cd, _)))
       case AnyInstanceOf(cd, e) => Some((e, AnyInstanceOf(cd, _)))
+      case AsInstanceOf(cd, e) => Some((e, AsInstanceOf(cd, _)))
       case TupleSelect(t, i) => Some((t, tupleSelect(_, i, t.getType.asInstanceOf[TupleType].dimension)))
       case ArrayLength(a) => Some((a, ArrayLength))
       case Lambda(args, body) => Some((body, Lambda(args, _)))

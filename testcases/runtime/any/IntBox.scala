@@ -6,15 +6,17 @@ object IntBox {
 
   // def fails = A().isInstanceOf[B]
 
-  // case class IntBox(value: Int)
+  case class IntBox(value: Int)
 
-  // case class CastingBox(value: IntBox) {
-  //   def casted: IntBox = value.asInstanceOf[IntBox]
+  case class CastingBox(value: IntBox) {
+    def casted: IntBox = value.asInstanceOf[IntBox]
 
-  //   def safeCasted: IntBox =
-  //     if (value.isInstanceOf[IntBox]) casted
-  //     else IntBox(-1)
-  // }
+    def safeCasted: IntBox =
+      if (value.isInstanceOf[IntBox]) casted
+      else IntBox(-1)
+
+    // def asAny: Any = value.asInstanceOf[Any]
+  }
 
   // case class CastingIntBox(value: Int) {
   //   def casted: Int = value.asInstanceOf[Int]

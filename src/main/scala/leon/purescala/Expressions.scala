@@ -281,6 +281,10 @@ object Expressions {
   case class CaseClassInstanceOf(classType: CaseClassType, expr: Expr) extends InstanceOfExpr(classType, expr)
   case class AnyInstanceOf(classType: TypeTree, expr: Expr) extends InstanceOfExpr(classType, expr)
 
+  case class AsInstanceOf(classType: TypeTree, expr: Expr) extends Expr {
+    val getType = classType
+  }
+
   object CaseClassSelector {
     def apply(classType: CaseClassType, caseClass: Expr, selector: Identifier): Expr = {
       caseClass match {

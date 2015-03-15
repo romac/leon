@@ -1515,6 +1515,41 @@ trait CodeExtraction extends ASTExtractors {
           }
         }
 
+        case ExAsInstanceOf(tt, cc) =>
+          val ccRec = extractTree(cc)
+          val checkType = extractType(tt)
+          ccRec.getType match {
+            case AnyType =>
+              AsInstanceOf(checkType, ccRec)
+
+            case _: ClassType =>
+              checkType match {
+                case cct @ CaseClassType(ccd, tps) =>
+                  val rootType: LeonClassDef  = if(ccd.parent != None) ccd.parent.get.classDef else ccd
+
+                  if(!ccRec.getType.isInstanceOf[ClassType]) {
+                    outOfSubsetError(tr, "asInstanceOf can only be used with a case class")
+                  } else {
+                    val testedExprType = ccRec.getType.asInstanceOf[ClassType].classDef
+                    val testedExprRootType: LeonClassDef = if(testedExprType.parent != None) testedExprType.parent.get.classDef else testedExprType
+
+                    if(rootType != testedExprRootType) {
+                      outOfSubsetError(tr, "asInstanceOf can only be used with compatible case classes")
+                    } else {
+                      AsInstanceOf(cct, ccRec)
+                    }
+                  }
+
+                case AnyType =>
+                  AsInstanceOf(checkType, ccRec)
+
+                case _ =>
+                  outOfSubsetError(tr, "asInstanceOf can only be used with a case class or Any")
+              }
+            case _ =>
+              outOfSubsetError(tr, "asInstanceOf can only be used with a case class or Any")
+          }
+
         case pm @ ExPatternMatching(sel, cses) =>
           val rs = extractTree(sel)
           val rc = cses.map(extractMatchCase)
