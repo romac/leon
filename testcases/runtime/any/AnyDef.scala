@@ -19,9 +19,9 @@ object AnyDef {
   //
 
   // [Warning] Resorting to uninterpreted type for : Tree? (class leon.purescala.TypeTrees$AnyType$)
-  def retXEnsuring(x: Any): Any = {
-    x
-  } ensuring (out => out == x)
+  // def retXEnsuring(x: Any): Any = {
+  //   x
+  // } ensuring (out => out == x)
 
   //
   // not working (yet)

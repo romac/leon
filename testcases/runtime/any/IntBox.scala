@@ -24,12 +24,27 @@ object IntBox {
   //     else -1
   // }
 
-  case class CastingBox(value: Any) {
-    def casted: Int = value.asInstanceOf[Int]
+  // case class CastingBox(value: Any) {
+  //   def casted: Int = value.asInstanceOf[Int]
 
-    def safeCasted: Int =
-      if (value.isInstanceOf[Int]) casted
-      else -1
-  }
+  //   def safeCasted: Int =
+  //     if (value.isInstanceOf[Int]) casted
+  //     else -1
+  // }
+
+  // case class IntBox(value: Any) {
+  //   def get: Int =
+  //     if (value.isInstanceOf[Int]) value else -1
+  // }
+
+  // case class IntBoxMatch(value: Any) {
+  //   def foo: Int =
+  //     if (value.isInstanceOf[Int]) 42 else -1
+
+  //   def bar: Int = value match {
+  //     case i: Int => 42
+  //     case _ => -1
+  //   }
+  // }
 
 }
