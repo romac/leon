@@ -90,7 +90,7 @@ object Constructors {
           case _ => true
         })
 
-      case _: TupleType | Int32Type | BooleanType | UnitType | _: AbstractClassType =>
+      case _: TupleType | Int32Type | BooleanType | UnitType | AnyType | _: AbstractClassType =>
         cases
 
       case t =>
