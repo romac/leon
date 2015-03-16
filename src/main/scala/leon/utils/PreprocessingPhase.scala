@@ -6,7 +6,7 @@ package utils
 import purescala.Definitions.Program
 import purescala.ScalaPrinter
 
-import purescala.{MethodLifting, CompleteAbstractDefinitions,CheckADTFieldsTypes}
+import purescala.{MethodLifting, CompleteAbstractDefinitions, CheckADTFieldsTypes, DeclareAnyWrappers}
 import synthesis.{ConvertWithOracle, ConvertHoles}
 import verification.InjectAsserts
 
@@ -18,6 +18,7 @@ object PreprocessingPhase extends TransformationPhase {
   def apply(ctx: LeonContext, p: Program): Program = {
 
     val phases =
+      DeclareAnyWrappers            andThen
       ScopingPhase                  andThen
       MethodLifting                 andThen
       TypingPhase                   andThen
