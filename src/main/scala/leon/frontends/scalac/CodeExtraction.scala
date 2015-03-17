@@ -1467,14 +1467,7 @@ trait CodeExtraction extends ASTExtractors {
           }
           val r2 = extractTree(t2)
           val r3 = extractTree(t3)
-          val lub = leastUpperBound(r2.getType, r3.getType)
-          lub match {
-            case Some(lub) =>
-              IfExpr(r1, r2, r3)
-
-            case None =>
-              outOfSubsetError(tr, "Both branches of ifthenelse have incompatible types ("+r2.getType.asString(ctx)+" and "+r3.getType.asString(ctx)+")")
-          }
+          IfExpr(r1, r2, r3)
 
         case ExIsInstanceOf(tt, cc) => {
           val ccRec = extractTree(cc)
