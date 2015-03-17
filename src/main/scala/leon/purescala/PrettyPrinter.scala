@@ -291,6 +291,8 @@ class PrettyPrinter(opts: PrinterOptions, val sb: StringBuffer = new StringBuffe
         } else {
           p"$e.isInstanceOf[$cct]"
         }
+      case AnyInstanceOf(cct, e)               => p"$e.isInstanceOf[$cct]"
+      case AsInstanceOf(cct, e)                => p"$e.asInstanceOf[$cct]"
       case CaseClassSelector(_, e, id)         => p"$e.$id"
       case MethodInvocation(rec, _, tfd, args) =>
         p"$rec.${tfd.id}"
@@ -521,6 +523,7 @@ class PrettyPrinter(opts: PrinterOptions, val sb: StringBuffer = new StringBuffe
 
       // Types
       case Untyped               => p"<untyped>"
+      case AnyType               => p"Any"
       case UnitType              => p"Unit"
       case Int32Type             => p"Int"
       case IntegerType           => p"BigInt"
