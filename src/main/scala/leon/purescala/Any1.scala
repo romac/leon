@@ -23,4 +23,10 @@ object Any1 {
   def registerChild(cd: ClassDef): Unit =
     classDef.registerChildren(cd)
 
+  def isAny(tpe: TypeTree): Boolean =
+    tpe == AnyType || tpe == classType
+
+  def isAnyFunDef(fd: FunDef): Boolean =
+    isAny(fd.returnType) || fd.params.exists(p => isAny(p.getType))
+
 }

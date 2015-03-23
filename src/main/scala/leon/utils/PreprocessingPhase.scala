@@ -19,6 +19,7 @@ object PreprocessingPhase extends TransformationPhase {
 
     val phases =
       DeclareAnyWrappers            andThen
+      WrapFunDefAnyParams           andThen
       ScopingPhase                  andThen
       MethodLifting                 andThen
       TypingPhase                   andThen
