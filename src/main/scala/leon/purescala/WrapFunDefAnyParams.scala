@@ -1,4 +1,4 @@
-
+/* Copyright 2009-2015 EPFL, Lausanne */
 
 package leon
 package purescala
@@ -12,6 +12,7 @@ import ExprOps._
 import DefOps._
 import TypeOps._
 
+// FIXME: replaceFunDefs doesn't replace inner FunDefs
 object WrapFunDefAnyParams extends TransformationPhase {
 
   val name = "Wrap FunDef's Any Params"
@@ -34,13 +35,13 @@ object WrapFunDefAnyParams extends TransformationPhase {
         val newFd = new FunDef(fd.id.freshen, fd.tparams, retType, params, fd.defType)
         newFd.copyContentFrom(fd)
         newFd.copiedFrom(fd)
+
         Some(newFd)
 
       case _ => None
     }
 
     val (prog, fdMap) = replaceFunDefs(program)(wrapFunDefTypes)
-
     prog
   }
 

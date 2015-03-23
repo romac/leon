@@ -1,3 +1,5 @@
+/* Copyright 2009-2015 EPFL, Lausanne */
+
 package leon
 package purescala
 
@@ -20,6 +22,9 @@ object Any1 {
   def getWrapperFor(cd: ClassDef): Option[CaseClassDef] =
     map get cd
 
+  def wrapperFor(cd: ClassDef): CaseClassDef =
+    map(cd)
+
   def registerChild(cd: ClassDef): Unit =
     classDef.registerChildren(cd)
 
@@ -28,5 +33,23 @@ object Any1 {
 
   def isAnyFunDef(fd: FunDef): Boolean =
     isAny(fd.returnType) || fd.params.exists(p => isAny(p.getType))
+
+  def wrap(e: Expr): Expr = e.getType match {
+    case AnyType => e
+    case Untyped => e // FIXME: Figure out what to do here
+    case tpe: ClassType =>
+      CaseClass(wrapperTypeFor(tpe), Seq(e))
+  }
+
+  def wrapperTypeFor(tpe: ClassType): CaseClassType = {
+    val rootClass = rootClassDef(tpe.classDef)
+    val any1Cd = map(rootClass)
+    classDefToClassType(any1Cd).asInstanceOf[CaseClassType]
+  }
+
+  def rootClassDef(cd: ClassDef): ClassDef = cd.parent match {
+    case None => cd
+    case Some(parent) => rootClassDef(parent.classDef)
+  }
 
 }
