@@ -50,7 +50,9 @@ object WrapAnyExprs extends TransformationPhase {
 
   def transform(e: Expr, tpe: TypeTree): Expr = e match {
     case IfExpr(cond, thenn, elze) if shouldWrap(e, tpe) =>
-      IfExpr(cond, transform(thenn, tpe), transform(elze, tpe)).copiedFrom(e)
+      IfExpr(transform(cond, cond.getType),
+             transform(thenn, tpe),
+             transform(elze, tpe)).copiedFrom(e)
 
     case m @ MatchExpr(scrut, cases) =>
       val expectedType =
@@ -58,7 +60,10 @@ object WrapAnyExprs extends TransformationPhase {
         else m.getType
 
       val wcases = cases.map { c =>
-        MatchCase(c.pattern, c.optGuard, transform(c.rhs, expectedType)).copiedFrom(c)
+        val wrhs = transform(c.rhs, expectedType)
+        val wpat = transformPattern(c.pattern, scrut.getType)
+        val wguard = c.optGuard.map(g => transform(g, g.getType))
+        MatchCase(wpat, wguard, wrhs).copiedFrom(c)
       }
 
       MatchExpr(scrut, wcases).copiedFrom(m)
@@ -93,6 +98,29 @@ object WrapAnyExprs extends TransformationPhase {
       wrap(res, tpe)
 
     case _ => e
+  }
+
+  def transformPattern(pat: Pattern, tpe: TypeTree): Pattern = pat match {
+    case InstanceOfPattern(binder, ct) if Any1.isAny(tpe) =>
+      CaseClassPattern(None, Any1.wrapperTypeFor(ct), Seq(pat)).copiedFrom(pat)
+
+    case CaseClassPattern(binder, ct, subPats) =>
+      if (Any1.isAny(tpe))
+        CaseClassPattern(None, Any1.wrapperTypeFor(ct), Seq(transformPattern(pat, ct))).copiedFrom(pat)
+      else
+        CaseClassPattern(binder, ct, transformSubPatterns(subPats, ct)).copiedFrom(pat)
+
+    case TuplePattern(binder, subPatterns) =>
+      pat // FIXME: What do we do with those?
+
+    case WildcardPattern(binder) =>
+      pat // FIXME: Make sure there's nothing to do here
+  }
+
+  def transformSubPatterns(subPatterns: Seq[Pattern], ct: ClassType): Seq[Pattern] = {
+    subPatterns.zip(ct.fieldsTypes) map { case (pat, tpe) =>
+      transformPattern(pat, tpe)
+    }
   }
 
 }
