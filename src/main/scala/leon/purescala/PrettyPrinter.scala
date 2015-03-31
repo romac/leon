@@ -535,6 +535,9 @@ class PrettyPrinter(opts: PrinterOptions, val sb: StringBuffer = new StringBuffe
       case MultisetType(bt)      => p"Multiset[$bt]"
       case TupleType(tpes)       => p"($tpes)"
       case FunctionType(fts, tt) => p"($fts) => $tt"
+
+      case c: ClassType if Any1.isAny(c) => p"Any1"
+
       case c: ClassType =>
         printWithPath(c.classDef)
         if (c.tps.nonEmpty) {
