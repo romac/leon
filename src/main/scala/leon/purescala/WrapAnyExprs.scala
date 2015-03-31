@@ -74,10 +74,10 @@ object WrapAnyExprs extends TransformationPhase {
       MatchExpr(wscrut, wcases).copiedFrom(m)
 
     case a @ AnyInstanceOf(cd: ClassType, v) =>
-      CaseClassInstanceOf(Any1.wrapperTypeFor(cd), (wrapExprIfNeeded(v, tpe))).copiedFrom(a)
+      CaseClassInstanceOf(Any1.wrapperTypeFor(cd), (wrapExpr(v, v.getType))).copiedFrom(a)
 
     case a @ AsInstanceOf(cd: ClassType, v) =>
-      AsInstanceOf(Any1.wrapperTypeFor(cd), (wrapExprIfNeeded(v, tpe))).copiedFrom(a)
+      AsInstanceOf(Any1.wrapperTypeFor(cd), (wrapExpr(v, v.getType))).copiedFrom(a)
 
     case fi @ FunctionInvocation(tfd, args) if Any1.isAnyFunDef(tfd.fd) =>
       val newArgs = wrapArguments(args, tfd.fd.params)
@@ -86,6 +86,9 @@ object WrapAnyExprs extends TransformationPhase {
     case mi @ MethodInvocation(rec, cd, tfd, args) if Any1.isAnyFunDef(tfd.fd) =>
       val newArgs = wrapArguments(args, tfd.fd.params)
       MethodInvocation(rec, cd, tfd, newArgs).copiedFrom(mi)
+
+    case ld @ LetDef(tfd, body) =>
+      LetDef(tfd, wrapExpr(body, tfd.returnType)).copiedFrom(ld)
 
     case v @ Variable(id) if Any1.isAny(id.getType) =>
       any1Var(v)
