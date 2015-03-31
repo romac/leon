@@ -41,8 +41,16 @@ object WrapAnyExprs extends TransformationPhase {
     }
   }
 
-  def wrapExprIfNeeded(e: Expr, tpe: TypeTree = Any1.classType): Expr =
-    if (Any1.shouldWrap(e, tpe)) Any1.wrap(e) else e
+  def wrapExprIfNeeded(e: Expr, tpe: TypeTree = Any1.classType): Expr = e match {
+    case v @ Variable(id) if Any1.isAny(v.getType) && Any1.isAny(tpe) => any1Var(v)
+    case _ if (Any1.shouldWrap(e, tpe))  => Any1.wrap(e)
+    case _ => e
+  }
+
+  def any1Var(v: Variable): Variable = {
+    val newId = FreshIdentifier(v.id.name, Any1.classType).copiedFrom(v.id)
+    Variable(newId).copiedFrom(v)
+  }
 
   def wrapExpr(e: Expr, tpe: TypeTree): Expr = e match {
     case IfExpr(cond, thenn, elze) if Any1.shouldWrap(e, tpe) =>
@@ -77,6 +85,9 @@ object WrapAnyExprs extends TransformationPhase {
     case mi @ MethodInvocation(rec, cd, tfd, args) if Any1.isAnyFunDef(tfd.fd) =>
       val newArgs = wrapArguments(args, tfd.fd.params)
       MethodInvocation(rec, cd, tfd, newArgs).copiedFrom(mi)
+
+    case v @ Variable(id) if Any1.isAny(id.getType) =>
+      any1Var(v)
 
     case t: Terminal if Any1.shouldWrap(e, tpe) =>
       Any1.wrap(t)
