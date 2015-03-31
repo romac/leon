@@ -70,7 +70,8 @@ object WrapAnyExprs extends TransformationPhase {
         MatchCase(wpat, wguard, wrhs).copiedFrom(c)
       }
 
-      MatchExpr(scrut, wcases).copiedFrom(m)
+      val wscrut = wrapExpr(scrut, scrut.getType)
+      MatchExpr(wscrut, wcases).copiedFrom(m)
 
     case a @ AnyInstanceOf(cd: ClassType, v) =>
       CaseClassInstanceOf(Any1.wrapperTypeFor(cd), (wrapExprIfNeeded(v, tpe))).copiedFrom(a)
