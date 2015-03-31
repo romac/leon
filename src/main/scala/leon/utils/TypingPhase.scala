@@ -24,7 +24,7 @@ object TypingPhase extends LeonPhase[Program, Program] {
    *    with the original type constraints.
    *
    * 2) Report warnings in case parts of the tree are not correctly typed
-   *    (Untyped).
+   *    (Untyped/Any).
    * 
    * 3) Make sure that abstract classes have at least one descendent
    */
@@ -69,6 +69,10 @@ object TypingPhase extends LeonPhase[Program, Program] {
         preTraversal{
           case t if !t.isTyped =>
             ctx.reporter.warning(t.getPos, "Tree "+t.asString(ctx)+" is not properly typed ("+t.getPos.fullString+")")
+
+          case t if t.getType == AnyType =>
+            ctx.reporter.warning(t.getPos, "Tree "+t.asString(ctx)+" is of type Any instead of Any1 ("+t.getPos.fullString+")")
+
           case _ =>
         }
       }
