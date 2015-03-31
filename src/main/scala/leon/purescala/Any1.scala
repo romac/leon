@@ -34,6 +34,9 @@ object Any1 {
   def isAnyFunDef(fd: FunDef): Boolean =
     isAny(fd.returnType) || fd.params.exists(p => isAny(p.getType))
 
+  def shouldWrap(e: Expr, tpe: TypeTree): Boolean =
+    isAny(tpe) && !isAny(e.getType)
+
   def wrap(e: Expr): Expr = e.getType match {
     case AnyType => e
     case Untyped => e // FIXME: Figure out what to do here

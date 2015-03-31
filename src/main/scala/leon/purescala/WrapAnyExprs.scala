@@ -14,7 +14,6 @@ import TypeOps._
 
 // TODO:
 // - Gracefully handle possible errors (ie. when getting wrapper type or casting)
-// - Also treat nested functions (done, but not in WrapFunDefAnyParams)
 
 object WrapAnyExprs extends TransformationPhase {
 
@@ -23,7 +22,7 @@ object WrapAnyExprs extends TransformationPhase {
 
   def apply(ctx: LeonContext, program: Program): Program = {
     def transformFunDef(fd: FunDef): Unit = {
-      fd.fullBody = transform(fd.fullBody, fd.returnType)
+      fd.fullBody = wrapExpr(fd.fullBody, fd.returnType)
       fd.nestedFuns foreach transformFunDef
     }
 
@@ -36,23 +35,20 @@ object WrapAnyExprs extends TransformationPhase {
 
     args.zip(params) map {
       case (arg, vd) if Any1.isAny(vd.getType) =>
-        wrap(arg)
+        wrapExprIfNeeded(arg)
 
       case (arg, _) => arg
     }
   }
 
-  def shouldWrap(e: Expr, tpe: TypeTree): Boolean =
-    Any1.isAny(tpe) && !Any1.isAny(e.getType)
+  def wrapExprIfNeeded(e: Expr, tpe: TypeTree = Any1.classType): Expr =
+    if (Any1.shouldWrap(e, tpe)) Any1.wrap(e) else e
 
-  def wrap(e: Expr, tpe: TypeTree = Any1.classType): Expr =
-    if (shouldWrap(e, tpe)) Any1.wrap(e) else e
-
-  def transform(e: Expr, tpe: TypeTree): Expr = e match {
-    case IfExpr(cond, thenn, elze) if shouldWrap(e, tpe) =>
-      IfExpr(transform(cond, cond.getType),
-             transform(thenn, tpe),
-             transform(elze, tpe)).copiedFrom(e)
+  def wrapExpr(e: Expr, tpe: TypeTree): Expr = e match {
+    case IfExpr(cond, thenn, elze) if Any1.shouldWrap(e, tpe) =>
+      IfExpr(wrapExpr(cond, cond.getType),
+             wrapExpr(thenn, tpe),
+             wrapExpr(elze, tpe)).copiedFrom(e)
 
     case m @ MatchExpr(scrut, cases) =>
       val expectedType =
@@ -60,19 +56,19 @@ object WrapAnyExprs extends TransformationPhase {
         else m.getType
 
       val wcases = cases.map { c =>
-        val wrhs = transform(c.rhs, expectedType)
-        val wpat = transformPattern(c.pattern, scrut.getType)
-        val wguard = c.optGuard.map(g => transform(g, g.getType))
+        val wrhs = wrapExpr(c.rhs, expectedType)
+        val wpat = wrapPattern(c.pattern, scrut.getType)
+        val wguard = c.optGuard.map(g => wrapExpr(g, g.getType))
         MatchCase(wpat, wguard, wrhs).copiedFrom(c)
       }
 
       MatchExpr(scrut, wcases).copiedFrom(m)
 
     case a @ AnyInstanceOf(cd: ClassType, v) =>
-      CaseClassInstanceOf(Any1.wrapperTypeFor(cd), (wrap(v, tpe))).copiedFrom(a)
+      CaseClassInstanceOf(Any1.wrapperTypeFor(cd), (wrapExprIfNeeded(v, tpe))).copiedFrom(a)
 
     case a @ AsInstanceOf(cd: ClassType, v) =>
-      AsInstanceOf(Any1.wrapperTypeFor(cd), (wrap(v, tpe))).copiedFrom(a)
+      AsInstanceOf(Any1.wrapperTypeFor(cd), (wrapExprIfNeeded(v, tpe))).copiedFrom(a)
 
     case fi @ FunctionInvocation(tfd, args) if Any1.isAnyFunDef(tfd.fd) =>
       val newArgs = wrapArguments(args, tfd.fd.params)
@@ -82,33 +78,33 @@ object WrapAnyExprs extends TransformationPhase {
       val newArgs = wrapArguments(args, tfd.fd.params)
       MethodInvocation(rec, cd, tfd, newArgs).copiedFrom(mi)
 
-    case t: Terminal if shouldWrap(e, tpe) =>
+    case t: Terminal if Any1.shouldWrap(e, tpe) =>
       Any1.wrap(t)
 
     case o @ UnaryOperator(e, builder) =>
-      val res = builder(transform(e, e.getType))
-      wrap(res, tpe)
+      val res = builder(wrapExpr(e, e.getType))
+      wrapExprIfNeeded(res, tpe)
 
     case o @ BinaryOperator(e1, e2, builder) =>
-      val res = builder(transform(e1, e1.getType), transform(e2, e2.getType)).copiedFrom(o)
-      wrap(res, tpe)
+      val res = builder(wrapExpr(e1, e1.getType), wrapExpr(e2, e2.getType)).copiedFrom(o)
+      wrapExprIfNeeded(res, tpe)
 
     case o @ NAryOperator(es, builder) =>
-      val res = builder(es.map(e => transform(e, e.getType))).copiedFrom(o)
-      wrap(res, tpe)
+      val res = builder(es.map(e => wrapExpr(e, e.getType))).copiedFrom(o)
+      wrapExprIfNeeded(res, tpe)
 
     case _ => e
   }
 
-  def transformPattern(pat: Pattern, tpe: TypeTree): Pattern = pat match {
+  def wrapPattern(pat: Pattern, tpe: TypeTree): Pattern = pat match {
     case InstanceOfPattern(binder, ct) if Any1.isAny(tpe) =>
       CaseClassPattern(None, Any1.wrapperTypeFor(ct), Seq(pat)).copiedFrom(pat)
 
     case CaseClassPattern(binder, ct, subPats) =>
       if (Any1.isAny(tpe))
-        CaseClassPattern(None, Any1.wrapperTypeFor(ct), Seq(transformPattern(pat, ct))).copiedFrom(pat)
+        CaseClassPattern(None, Any1.wrapperTypeFor(ct), Seq(wrapPattern(pat, ct))).copiedFrom(pat)
       else
-        CaseClassPattern(binder, ct, transformSubPatterns(subPats, ct)).copiedFrom(pat)
+        CaseClassPattern(binder, ct, wrapSubPatterns(subPats, ct)).copiedFrom(pat)
 
     case TuplePattern(binder, subPatterns) =>
       pat // FIXME: What do we do with those?
@@ -117,9 +113,9 @@ object WrapAnyExprs extends TransformationPhase {
       pat // FIXME: Make sure there's nothing to do here
   }
 
-  def transformSubPatterns(subPatterns: Seq[Pattern], ct: ClassType): Seq[Pattern] = {
+  def wrapSubPatterns(subPatterns: Seq[Pattern], ct: ClassType): Seq[Pattern] = {
     subPatterns.zip(ct.fieldsTypes) map { case (pat, tpe) =>
-      transformPattern(pat, tpe)
+      wrapPattern(pat, tpe)
     }
   }
 

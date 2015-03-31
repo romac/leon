@@ -12,7 +12,7 @@ import ExprOps._
 import DefOps._
 import TypeOps._
 
-// FIXME: replaceFunDefs doesn't replace inner FunDefs
+// FIXME: replaceFunDefs doesn't replace inner FunDefs nor MethodInvocations
 object WrapFunDefAnyParams extends TransformationPhase {
 
   val name = "Wrap FunDef's Any Params"
