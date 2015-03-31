@@ -43,27 +43,10 @@ object WrapFunDefAnyParams extends TransformationPhase {
         Some(fd)
     }
 
-    // TODO: Reduce duplicated code by exposing fiMap and replaceCalls from DefOps.
-    def fiMap(fi: FunctionInvocation, nfd: FunDef): Option[FunctionInvocation] = (fi, nfd) match {
-      case (FunctionInvocation(old, args), newfd) if old.fd != newfd =>
-        Some(FunctionInvocation(newfd.typed(old.tps), args))
-      case _ =>
-        None
-    }
-
     def wrapNestedFuns(e: Expr): Expr = {
       var fdMapCache = Map[FunDef, FunDef]()
       def fdMap(fd: FunDef): FunDef = {
         fdMapCache.get(fd).getOrElse(fd)
-      }
-
-      def replaceCalls(e: Expr): Expr = {
-        preMap {
-          case fi @ FunctionInvocation(TypedFunDef(fd, tps), args) =>
-            fiMap(fi, fdMap(fd)).map(_.setPos(fi))
-          case _ =>
-            None
-        }(e)
       }
 
       val newBody = preMap {
@@ -75,7 +58,7 @@ object WrapFunDefAnyParams extends TransformationPhase {
         case _ => None
       }(e)
 
-      replaceCalls(newBody)
+      replaceCalls(newBody)(fdMap)
     }
 
     val (prog, fdMap) = replaceFunDefs(program)(wrapFunDefTypes)
