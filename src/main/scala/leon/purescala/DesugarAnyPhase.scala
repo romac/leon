@@ -13,9 +13,9 @@ object DesugarAnyPhase extends TransformationPhase {
   def apply(ctx: LeonContext, p: Program): Program = {
 
     val phases =
-      DeclareAnyWrappers   andThen
-      WrapFunDefAnyParams  andThen
-      WrapAnyExprs         andThen
+      DeclareAnyWrappers     andThen
+      ReplaceTypeAnyWithAny1 andThen
+      WrapAnyExprs           andThen
       PrinterPhase
 
     phases.run(ctx)(p)

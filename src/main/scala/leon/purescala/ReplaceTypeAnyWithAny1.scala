@@ -12,14 +12,14 @@ import ExprOps._
 import DefOps._
 import TypeOps._
 
-object WrapFunDefAnyParams extends TransformationPhase {
+object ReplaceTypeAnyWithAny1 extends TransformationPhase {
 
-  val name = "Wrap FunDef's Any Params"
-  val description = "Wrap FunDef's parameters of type Any into Any1"
+  val name = "Replace Type Any With Any1"
+  val description = "Replace Any with Any1 in FunDef's return type and parameters"
 
   def apply(ctx: LeonContext, program: Program): Program = {
 
-    def wrapFunDefTypes(fd: FunDef): Option[FunDef] = fd match {
+    def replaceTypes(fd: FunDef): Option[FunDef] = fd match {
       case _ if Any1.isAnyFunDef(fd) =>
         val retType = if (fd.returnType == AnyType) Any1.classType else fd.returnType
 
@@ -33,17 +33,17 @@ object WrapFunDefAnyParams extends TransformationPhase {
 
         val newFd = new FunDef(fd.id.freshen, fd.tparams, retType, params, fd.defType)
         newFd.copyContentFrom(fd)
-        newFd.fullBody = wrapNestedFuns(newFd.fullBody)
+        newFd.fullBody = processNestedFunctions(newFd.fullBody)
         newFd.copiedFrom(fd)
 
         Some(newFd)
 
       case _ =>
-        fd.fullBody = wrapNestedFuns(fd.fullBody)
+        fd.fullBody = processNestedFunctions(fd.fullBody)
         Some(fd)
     }
 
-    def wrapNestedFuns(e: Expr): Expr = {
+    def processNestedFunctions(e: Expr): Expr = {
       var fdMapCache = Map[FunDef, FunDef]()
       def fdMap(fd: FunDef): FunDef = {
         fdMapCache.get(fd).getOrElse(fd)
@@ -51,9 +51,9 @@ object WrapFunDefAnyParams extends TransformationPhase {
 
       val newBody = preMap {
         case ld @ LetDef(nfd, body) =>
-          val wnfd = wrapFunDefTypes(nfd)
+          val wnfd = replaceTypes(nfd)
           wnfd.foreach(fdMapCache += nfd -> _)
-          wnfd.map(LetDef(_, wrapNestedFuns(body)).copiedFrom(ld))
+          wnfd.map(LetDef(_, processNestedFunctions(body)).copiedFrom(ld))
 
         case _ => None
       }(e)
@@ -61,7 +61,7 @@ object WrapFunDefAnyParams extends TransformationPhase {
       replaceCalls(newBody)(fdMap)
     }
 
-    val (prog, fdMap) = replaceFunDefs(program)(wrapFunDefTypes)
+    val (prog, fdMap) = replaceFunDefs(program)(replaceTypes)
     prog
   }
 
