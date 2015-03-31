@@ -45,6 +45,33 @@ object PatternMatch {
     case _       => Unknown(x)
   }
 
+  def recId(x: Any): Any = {
+    def rec(x: Any, again: Boolean): Any = if (again) rec(x, false) else x
+    rec(x, true)
+  }
+
+  def recId2(x: Expr): Any = {
+    def rec2(x: Any, again: Boolean): Any = if (again) rec2(x, false) else x
+    rec2(x, true)
+  }
+
+  def idThisMethod(x: Expr): Any = {
+    this.recId(x)
+  }
+
+  case object idObj {
+    def apply(x: Any): Any = x
+  }
+
+  case class IdClass() {
+    def apply(x: Any): Any = x
+  }
+
+  // def idObjMethod(x: Expr): Expr = idObj.apply(x).asInstanceOf[Expr]
+  // def idClassMethod(x: Expr): Expr = (new IdClass()).apply(x).asInstanceOf[Expr]
+  def idObjMethod(x: Expr): Any = idObj.apply(x)
+  def idClassMethod(x: Expr): Any = IdClass().apply(x)
+
   // val a: Any = Lit(1)
   // val b: Any = IntBox(2)
 
