@@ -536,7 +536,8 @@ class PrettyPrinter(opts: PrinterOptions, val sb: StringBuffer = new StringBuffe
       case TupleType(tpes)       => p"($tpes)"
       case FunctionType(fts, tt) => p"($fts) => $tt"
 
-      case c: ClassType if Any1Ops.isAny(c) => p"Any1"
+      case c: ClassType if c == Any1Ops.classType =>
+        p"Any1"
 
       case c: ClassType =>
         printWithPath(c.classDef)

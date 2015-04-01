@@ -7,12 +7,13 @@ import Common._
 import Definitions._
 import Expressions._
 import Types._
+import TypeOps._
 
 object Any1Ops {
 
   val classDef  = AbstractClassDef(FreshIdentifier("Any1"), Seq(), None)
   val classType = AbstractClassType(classDef, Seq())
-  val module    = ModuleDef(FreshIdentifier("Any1$Module"), Seq(classDef), false)
+  val moduleDef = ModuleDef(FreshIdentifier("Any1$Module"), Seq(classDef), false)
 
   private var wrapperMap = Map[ClassDef, CaseClassDef]()
 
@@ -29,13 +30,16 @@ object Any1Ops {
     classDef.registerChildren(cd)
 
   def isAny(tpe: TypeTree): Boolean =
-    tpe == AnyType || tpe == classType
+    tpe == AnyType || isSubtypeOf(tpe, classType)
+
+  def isAny1(tpe: TypeTree): Boolean =
+    tpe == classType
 
   def isAnyFunDef(fd: FunDef): Boolean =
     isAny(fd.returnType) || fd.params.exists(p => isAny(p.getType))
 
   def shouldWrap(e: Expr, tpe: TypeTree): Boolean =
-    isAny(tpe) && !isAny(e.getType)
+    isAny(tpe) && !isAny1(e.getType)
 
   def wrap(e: Expr): Expr = e.getType match {
     case AnyType => e

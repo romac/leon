@@ -23,7 +23,7 @@ object DeclareAnyWrappers extends TransformationPhase {
         val classType = classDefToClassType(classDef, Seq())
 
         val valueId   = FreshIdentifier("value", classType).setPos(cd)
-        val field     = ValDef(valueId, Some(classType)).setPos(cd)
+        val field     = ValDef(valueId, Some(classDefToClassType(cd))).setPos(cd)
 
         classDef.setFields(Seq(field))
 
@@ -34,7 +34,7 @@ object DeclareAnyWrappers extends TransformationPhase {
     }
 
     def walkUnit(u: UnitDef): UnitDef = {
-      u.copy(modules = Any1Ops.module +: (u.modules map walkModule))
+      u.copy(modules = Any1Ops.moduleDef +: (u.modules map walkModule))
     }
 
     def walkModule(m: ModuleDef): ModuleDef = {

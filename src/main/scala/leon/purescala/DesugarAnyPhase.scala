@@ -8,7 +8,7 @@ import Definitions.Program
 object DesugarAnyPhase extends TransformationPhase {
 
   val name = "Desugar Any"
-  val description = "Desugar Any into case classes extending Any1"
+  val description = "Provide support for Any via case class wrappers"
 
   def apply(ctx: LeonContext, p: Program): Program = {
 

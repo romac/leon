@@ -55,8 +55,8 @@ object PatternMatch {
     rec2(x, true)
   }
 
-  def idThisMethod(x: Expr): Any = {
-    this.recId(x)
+  def idThisMethod(x: Expr, b: Boolean): Any = {
+    this.recId(if (b) x else idThisMethod(x, true))
   }
 
   case object idObj {
