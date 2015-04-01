@@ -16,18 +16,24 @@ object DesugarAnyPhase extends TransformationPhase {
       DeclareAnyWrappers     andThen
       ReplaceTypeAnyWithAny1 andThen
       WrapAnyExprs           andThen
-      PrinterPhase
+      PrinterPhase(name)
 
     phases.run(ctx)(p)
   }
 }
 
-object PrinterPhase extends TransformationPhase {
+case class PrinterPhase(header: String, printer: PrettyPrinterFactory = ScalaPrinter) extends TransformationPhase {
   val name = "Printer"
   val description = "Print the program"
 
   def apply(ctx: LeonContext, p: Program): Program = {
-    ctx.reporter.info(PrettyPrinter(p))
+    ctx.reporter.info(
+      "#" * (header.length + 4) + "\n" +
+      "# " + header + " #" + "\n" +
+      "#" * (header.length + 4) + "\n" +
+      printer(p)
+    )
+
     p
   }
 }
