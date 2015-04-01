@@ -73,6 +73,10 @@ object TypingPhase extends LeonPhase[Program, Program] {
           case t if t.getType == AnyType =>
             ctx.reporter.warning(t.getPos, "Tree "+t.asString(ctx)+" is of type Any instead of Any1 ("+t.getPos.fullString+")")
 
+          case t @ AnyInstanceOf(_, _) =>
+            ctx.reporter.warning(t.getPos, "Tree "+t.asString(ctx)+" should have been desugared " +
+                                           "to CaseClassInstanceOf by now (" + t.getPos.fullString+")")
+
           case _ =>
         }
       }
