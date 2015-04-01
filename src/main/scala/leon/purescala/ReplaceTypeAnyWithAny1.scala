@@ -20,13 +20,13 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
   def apply(ctx: LeonContext, program: Program): Program = {
 
     def replaceTypes(fd: FunDef): Option[FunDef] = fd match {
-      case _ if Any1.isAnyFunDef(fd) =>
-        val retType = if (fd.returnType == AnyType) Any1.classType else fd.returnType
+      case _ if Any1Ops.isAnyFunDef(fd) =>
+        val retType = if (fd.returnType == AnyType) Any1Ops.classType else fd.returnType
 
         val params = fd.params map {
           case vd if vd.getType == AnyType =>
-            val newId = FreshIdentifier(vd.id.name, Any1.classType).copiedFrom(vd.id)
-            ValDef(newId, Some(Any1.classType)).copiedFrom(vd)
+            val newId = FreshIdentifier(vd.id.name, Any1Ops.classType).copiedFrom(vd.id)
+            ValDef(newId, Some(Any1Ops.classType)).copiedFrom(vd)
 
           case vd => vd
         }

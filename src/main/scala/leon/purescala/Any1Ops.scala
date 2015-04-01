@@ -8,22 +8,22 @@ import Definitions._
 import Expressions._
 import Types._
 
-object Any1 {
+object Any1Ops {
 
   val classDef  = AbstractClassDef(FreshIdentifier("Any1"), Seq(), None)
   val classType = AbstractClassType(classDef, Seq())
   val module    = ModuleDef(FreshIdentifier("Any1$Module"), Seq(classDef), false)
 
-  private var map = Map[ClassDef, CaseClassDef]()
+  private var wrapperMap = Map[ClassDef, CaseClassDef]()
 
   def registerWrapper(cd: ClassDef, wrapper: CaseClassDef): Unit =
-    map += (cd -> wrapper)
+    wrapperMap += cd -> wrapper
 
   def getWrapperFor(cd: ClassDef): Option[CaseClassDef] =
-    map get cd
+    wrapperMap get cd
 
   def wrapperFor(cd: ClassDef): CaseClassDef =
-    map(cd)
+    wrapperMap(cd)
 
   def registerChild(cd: ClassDef): Unit =
     classDef.registerChildren(cd)
@@ -46,7 +46,7 @@ object Any1 {
 
   def wrapperTypeFor(tpe: ClassType): CaseClassType = {
     val rootClass = rootClassDef(tpe.classDef)
-    val any1Cd = map(rootClass)
+    val any1Cd = wrapperMap(rootClass)
     classDefToClassType(any1Cd).asInstanceOf[CaseClassType]
   }
 
