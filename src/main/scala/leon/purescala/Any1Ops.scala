@@ -11,9 +11,10 @@ import TypeOps._
 
 object Any1Ops {
 
-  val classDef  = AbstractClassDef(FreshIdentifier("Any1"), Seq(), None)
-  val classType = AbstractClassType(classDef, Seq())
-  val moduleDef = ModuleDef(FreshIdentifier("Any1$Module"), Seq(classDef), false)
+  val classDef      = AbstractClassDef(FreshIdentifier("Any1"), Seq(), None)
+  val classType     = AbstractClassType(classDef, Seq())
+  val unexpectedDef = CaseClassDef(FreshIdentifier("Any1Unexpected"), Seq(), Some(classType), true)
+  val moduleDef     = ModuleDef(FreshIdentifier("Any1$Module"), Seq(classDef, unexpectedDef), false)
 
   private var wrapperMap = Map[ClassDef, CaseClassDef]()
 
