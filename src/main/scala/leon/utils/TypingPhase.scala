@@ -81,6 +81,13 @@ object TypingPhase extends LeonPhase[Program, Program] {
         }
       }
 
+    preTraversal {
+      case t if t.getType == AnyType =>
+        ctx.reporter.warning(t.getPos, "Tree "+t.asString(ctx)+" is of type Any instead of Any1 ("+t.getPos.fullString+")")
+
+      case _ =>
+    }(fd.fullBody)
+
 
     })
 
