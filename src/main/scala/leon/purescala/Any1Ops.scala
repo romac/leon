@@ -43,10 +43,12 @@ object Any1Ops {
     isAny(tpe) && !isAny1(e.getType)
 
   def wrap(e: Expr): Expr = e.getType match {
-    case AnyType => e
-    case Untyped => e // FIXME: Figure out what to do here
-    case tpe: ClassType =>
+    // case AnyType => e
+    // case Untyped => e // FIXME: Figure out what to do here
+    // case tpe: TypeParameter => e
+    case tpe: ClassType if wrapperMap contains rootClassDef(tpe.classDef) =>
       CaseClass(wrapperTypeFor(tpe), Seq(e))
+    case _  => e
   }
 
   def wrapperTypeFor(tpe: ClassType): CaseClassType = {
