@@ -44,8 +44,8 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
       Some(newFd)
     }
 
-    def processNestedFunctions(e: Expr): Expr = {
-      var fdMapCache = Map[FunDef, FunDef]()
+    def processBody(e: Expr, cache: Map[FunDef, FunDef] = Map()): Expr = {
+      var fdMapCache = cache
       def fdMap(fd: FunDef): FunDef = {
         fdMapCache.get(fd).getOrElse(fd)
       }
@@ -54,7 +54,7 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
         case ld @ LetDef(nfd, body) =>
           val wnfd = replaceTypes(nfd)
           wnfd.foreach(fdMapCache += nfd -> _)
-          wnfd.map(LetDef(_, processNestedFunctions(body)).copiedFrom(ld))
+          wnfd.map(LetDef(_, processBody(body, fdMapCache)).copiedFrom(ld))
 
         case _ => None
       }(e)
@@ -62,7 +62,7 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
       replaceCalls(newBody)(fdMap)
     }
 
-    val (prog, fdMap) = replaceFunDefs(program)(replaceTypes)
+    val (prog, _) = replaceFunDefs(program)(replaceTypes)
     prog
   }
 
