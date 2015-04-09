@@ -19,28 +19,29 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
 
   def apply(ctx: LeonContext, program: Program): Program = {
 
-    def replaceTypes(fd: FunDef): Option[FunDef] = fd match {
-      case _ if Any1Ops.isAnyFunDef(fd) =>
-        val retType = if (fd.returnType == AnyType) Any1Ops.classType else fd.returnType
+    // TODO: Keep track of functions that returns Any and replace their invocations
+    def transformType(t: TypeTree): Option[TypeTree] = t match {
+      case AnyType => Some(Any1Ops.classType)
+      case t       => None
+    }
 
-        val params = fd.params map {
-          case vd if vd.getType == AnyType =>
-            val newId = FreshIdentifier(vd.id.name, Any1Ops.classType).copiedFrom(vd.id)
-            ValDef(newId, Some(Any1Ops.classType)).copiedFrom(vd)
+    def replaceTypes(fd: FunDef): Option[FunDef] = {
+      val retType = mapType(transformType)(fd.returnType)
 
-          case vd => vd
-        }
+      val params = fd.params map { vd =>
+        val newTpe = mapType(transformType)(vd.getType)
+        if (newTpe != vd.getType)
+          ValDef(FreshIdentifier(vd.id.name, newTpe).copiedFrom(vd.id)).copiedFrom(vd)
+        else
+          vd
+      }
 
-        val newFd = new FunDef(fd.id.freshen, fd.tparams, retType, params, fd.defType)
-        newFd.copyContentFrom(fd)
-        newFd.fullBody = processNestedFunctions(newFd.fullBody)
-        newFd.copiedFrom(fd)
+      val newFd = new FunDef(fd.id.freshen, fd.tparams, retType, params, fd.defType)
+      newFd.copyContentFrom(fd)
+      newFd.fullBody = processBody(newFd.fullBody)
+      newFd.copiedFrom(fd)
 
-        Some(newFd)
-
-      case _ =>
-        fd.fullBody = processNestedFunctions(fd.fullBody)
-        Some(fd)
+      Some(newFd)
     }
 
     def processNestedFunctions(e: Expr): Expr = {

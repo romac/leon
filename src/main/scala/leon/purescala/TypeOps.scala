@@ -11,6 +11,16 @@ import Extractors._
 import Constructors._
 
 object TypeOps {
+
+  def mapType(f: TypeTree => Option[TypeTree])(t: TypeTree): TypeTree = t match {
+    case NAryType(Nil, builder) =>
+      f(t).map(_.copiedFrom(t)).getOrElse(t)
+
+    case NAryType(tps, builder) =>
+      val newTps = tps map mapType(f)
+      builder(newTps).copiedFrom(t)
+  }
+
   def typeDepth(t: TypeTree): Int = t match {
     case NAryType(tps, builder) => 1+tps.foldLeft(0) { case (d, t) => d max typeDepth(t) }
   }
