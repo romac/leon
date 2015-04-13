@@ -46,11 +46,6 @@ object WrapAnyExprs extends TransformationPhase {
     case _ => e
   }
 
-  def varOfTypeAny(v: Variable): Variable = {
-    val newId = FreshIdentifier(v.id.name, Any1Ops.classType).copiedFrom(v.id)
-    Variable(newId).copiedFrom(v)
-  }
-
   def wrapExpr(e: Expr, tpe: TypeTree): Expr = e match {
     case IfExpr(cond, thenn, elze) if Any1Ops.shouldWrap(e, tpe) =>
       IfExpr(wrapExpr(cond, cond.getType),
@@ -90,7 +85,8 @@ object WrapAnyExprs extends TransformationPhase {
       LetDef(tfd, wrapExpr(body, tfd.returnType)).copiedFrom(ld)
 
     case v @ Variable(id) if id.getType == AnyType =>
-      varOfTypeAny(v)
+      v.id.setType(Any1Ops.classType)
+      v
 
     case t: Terminal if Any1Ops.shouldWrap(e, tpe) =>
       Any1Ops.wrap(t)

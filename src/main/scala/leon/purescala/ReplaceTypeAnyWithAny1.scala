@@ -25,12 +25,12 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
       case t       => None
     }
 
+    // FIXME: We don't need to return an Option since we mutate the type directly.
     def transformValDef(vd: ValDef): Option[ValDef] = {
         val newTpe = mapType(transformType)(vd.getType)
         if (newTpe != vd.getType) {
-          val newId = FreshIdentifier(vd.id.name, newTpe).copiedFrom(vd.id)
-          val newValDef = ValDef(newId).copiedFrom(vd)
-          Some(newValDef)
+          vd.id.setType(newTpe)
+          None
         }
         else None
     }
