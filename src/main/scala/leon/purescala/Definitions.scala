@@ -319,9 +319,7 @@ object Definitions {
 
 
     def selectorID2Index(id: Identifier) : Int = {
-      // FIXME: Ugly hack until we properly replace selectors in CaseClassSelector - @romac
-      // val index = fields.zipWithIndex.find(_._1.id == id).map(_._2)
-      val index = fields.zipWithIndex.find(_._1.id.name == id.name).map(_._2)
+      val index = fields.zipWithIndex.find(_._1.id == id).map(_._2)
 
       index.getOrElse {
         scala.sys.error("Could not find '"+id+"' ("+id.uniqueName+") within "+fields.map(_.id.uniqueName).mkString(", "))
