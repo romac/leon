@@ -13,8 +13,12 @@ import TypeOps._
 object Types {
 
   trait Typed {
-    val getType: TypeTree
+    def getType: TypeTree
     def isTyped : Boolean = getType != Untyped
+  }
+
+  trait MutableTyped extends Typed { self =>
+    def setType(tpe: TypeTree): self.type
   }
 
   class TypeErrorException(msg: String) extends Exception(msg)

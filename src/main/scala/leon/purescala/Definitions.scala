@@ -50,7 +50,7 @@ object Definitions {
   case class ValDef(id: Identifier, tpe: Option[TypeTree] = None) extends Definition with Typed {
     self: Serializable =>
 
-    val getType = tpe getOrElse id.getType
+    def getType = tpe getOrElse id.getType
 
     var defaultValue : Option[FunDef] = None
       
