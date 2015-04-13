@@ -60,6 +60,11 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
           wnfd.foreach(fdMapCache += nfd -> _)
           wnfd.map(LetDef(_, processBody(body, fdMapCache)).copiedFrom(ld))
 
+        case l @ Lambda(args, body) =>
+          val newArgs = args map (arg => transformValDef(arg).getOrElse(arg))
+          val newLambda = Lambda(newArgs, processBody(body, fdMapCache)).copiedFrom(l)
+          Some(newLambda)
+
         case _ => None
       }(e)
 
