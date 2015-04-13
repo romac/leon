@@ -25,16 +25,20 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
       case t       => None
     }
 
+    def transformValDef(vd: ValDef): Option[ValDef] = {
+        val newTpe = mapType(transformType)(vd.getType)
+        if (newTpe != vd.getType) {
+          val newId = FreshIdentifier(vd.id.name, newTpe).copiedFrom(vd.id)
+          val newValDef = ValDef(newId).copiedFrom(vd)
+          Some(newValDef)
+        }
+        else None
+    }
+
     def replaceTypes(fd: FunDef): Option[FunDef] = {
       val retType = mapType(transformType)(fd.returnType)
 
-      val params = fd.params map { vd =>
-        val newTpe = mapType(transformType)(vd.getType)
-        if (newTpe != vd.getType)
-          ValDef(FreshIdentifier(vd.id.name, newTpe).copiedFrom(vd.id)).copiedFrom(vd)
-        else
-          vd
-      }
+      val params = fd.params map (vd => transformValDef(vd).getOrElse(vd))
 
       val newFd = new FunDef(fd.id.freshen, fd.tparams, retType, params, fd.defType)
       newFd.copyContentFrom(fd)
@@ -63,6 +67,14 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
     }
 
     val (prog, _) = replaceFunDefs(program)(replaceTypes)
+
+    prog.definedClasses
+      .collect { case cd: CaseClassDef => cd }
+      .foreach { c =>
+        val fields = c.fields map (f => transformValDef(f).getOrElse(f))
+        c.setFields(fields)
+      }
+
     prog
   }
 
