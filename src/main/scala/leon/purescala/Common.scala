@@ -28,7 +28,14 @@ object Common {
   class Identifier private[Common](val name: String, val globalId: Int, val id: Int, val tpe: TypeTree, alwaysShowUniqueID: Boolean = false) extends Tree with Typed {
     self : Serializable =>
 
-    val getType = tpe
+    private var _tpe = tpe
+
+    def setType(newTpe: TypeTree) = {
+      _tpe = newTpe
+      this
+    }
+
+    def getType = _tpe
 
     override def equals(other: Any): Boolean = {
       if(other == null || !other.isInstanceOf[Identifier])
