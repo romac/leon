@@ -1,0 +1,12 @@
+[x] Add synthetic case class <: Any1
+[ ] Figure out what no warning are thrown when UnexpectedAny is not handled.
+
+[x] Replace Any w/ Any1 in case classes arguments, and their invocations.
+[~] Replace references to Any1 in type parameters (FunctionInvocation and CaseClass).
+[x] Check WrapAnyExprs and ReplaceAnyWithAny to ensure they traverse lambda and pre-postconditions.
+[x] Check why preTraversal doesn't traverse lambda and check explicitely the arguments.
+
+[~] Write ListAny library
+[~] Add support for higher order functions.
+
+[ ] ScalaJS - Purely Dynamic.
