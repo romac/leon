@@ -26,21 +26,18 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
     }
 
     // FIXME: We don't need to return an Option since we mutate the type directly.
-    def transformValDef(vd: ValDef): Option[ValDef] = {
+    def transformValDef(vd: ValDef): Unit = {
         val newTpe = mapType(transformType)(vd.getType)
-        if (newTpe != vd.getType) {
+        if (newTpe != vd.getType)
           vd.id.setType(newTpe)
-          None
-        }
-        else None
     }
 
     def replaceTypes(fd: FunDef): Option[FunDef] = {
       val retType = mapType(transformType)(fd.returnType)
 
-      val params = fd.params map (vd => transformValDef(vd).getOrElse(vd))
+      fd.params foreach transformValDef
 
-      val newFd = new FunDef(fd.id.freshen, fd.tparams, retType, params, fd.defType)
+      val newFd = new FunDef(fd.id.freshen, fd.tparams, retType, fd.params, fd.defType)
       newFd.copyContentFrom(fd)
       newFd.fullBody = processBody(newFd.fullBody)
       newFd.copiedFrom(fd)
@@ -61,8 +58,8 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
           wnfd.map(LetDef(_, processBody(body, fdMapCache)).copiedFrom(ld))
 
         case l @ Lambda(args, body) =>
-          val newArgs = args map (arg => transformValDef(arg).getOrElse(arg))
-          val newLambda = Lambda(newArgs, processBody(body, fdMapCache)).copiedFrom(l)
+          args foreach transformValDef
+          val newLambda = Lambda(args, processBody(body, fdMapCache)).copiedFrom(l)
           Some(newLambda)
 
         case _ => None
@@ -76,8 +73,8 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
     prog.definedClasses
       .collect { case cd: CaseClassDef => cd }
       .foreach { c =>
-        val fields = c.fields map (f => transformValDef(f).getOrElse(f))
-        c.setFields(fields)
+        c.fields foreach transformValDef
+        c.setFields(c.fields)
       }
 
     prog

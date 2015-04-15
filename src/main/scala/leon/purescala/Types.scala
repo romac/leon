@@ -106,7 +106,7 @@ object Types {
 
     def knownCCDescendents = classDef.knownCCDescendents.map(CaseClassType(_, tps))
 
-    lazy val fieldsTypes = fields.map(_.getType)
+    def fieldsTypes = fields.map(_.getType)
 
     lazy val root = parent.getOrElse(this)
 
