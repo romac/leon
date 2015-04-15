@@ -37,6 +37,13 @@ object WrapAnyExprs extends TransformationPhase {
       case (arg, vd) if Any1Ops.isAny(vd.getType) =>
         wrapExpr(arg, vd.getType)
 
+      case (l @ Lambda(args, body), vd) =>
+        val funType = vd.getType.asInstanceOf[FunctionType]
+        if (Any1Ops.isAny(funType.to)) {
+          Lambda(args, wrapExpr(body, funType.to)).copiedFrom(l)
+        }
+        else l
+
       case (arg, _) => arg
     }
   }
