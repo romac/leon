@@ -14,6 +14,7 @@ import TypeOps._
 
 // TODO:
 // - Gracefully handle possible errors (ie. when getting wrapper type or casting)
+// - Make sure there's no problem with TypedFunDef's param member being a lazy val instead of a def
 
 object WrapAnyExprs extends TransformationPhase {
 

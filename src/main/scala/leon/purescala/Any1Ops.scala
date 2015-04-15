@@ -9,6 +9,7 @@ import Expressions._
 import Types._
 import TypeOps._
 
+// TODO: Figure out why no warning are raised if we don't match on Unexpected
 object Any1Ops {
 
   val classDef      = AbstractClassDef(FreshIdentifier("Any1"), Seq(), None)
