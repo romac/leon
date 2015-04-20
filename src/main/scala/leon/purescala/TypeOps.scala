@@ -18,7 +18,9 @@ object TypeOps {
 
     case NAryType(tps, builder) =>
       val newTps = tps map mapType(f)
-      builder(newTps).copiedFrom(t)
+      f(t) getOrElse {
+        builder(newTps).copiedFrom(t)
+      }
   }
 
   def typeDepth(t: TypeTree): Int = t match {
