@@ -96,6 +96,17 @@ object WrapAnyExprs extends TransformationPhase {
       v.id.setType(Any1Ops.classType)
       v
 
+    case es @ EmptySet(tpe) =>
+      EmptySet(Any1Ops.mapAnyToAny1(tpe)).copiedFrom(es)
+
+    case ea @ EmptyArray(tpe) =>
+      EmptyArray(Any1Ops.mapAnyToAny1(tpe)).copiedFrom(ea)
+
+    case em @ EmptyMap(kTpe, vTpe) =>
+      val newKTpe = Any1Ops.mapAnyToAny1(kTpe)
+      val newVTpe = Any1Ops.mapAnyToAny1(vTpe)
+      EmptyMap(newKTpe, newVTpe).copiedFrom(em)
+
     case t: Terminal if Any1Ops.shouldWrap(e, tpe) =>
       Any1Ops.wrap(t)
 
