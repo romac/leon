@@ -135,17 +135,22 @@ object WrapAnyExprs extends TransformationPhase {
     case InstanceOfPattern(binder, ct) if Any1Ops.isAny(tpe) =>
       CaseClassPattern(None, Any1Ops.wrapperTypeFor(ct), Seq(pat)).copiedFrom(pat)
 
-    case CaseClassPattern(binder, ct, subPats) =>
-      if (Any1Ops.isAny(tpe))
-        CaseClassPattern(None, Any1Ops.wrapperTypeFor(ct), Seq(wrapPattern(pat, ct))).copiedFrom(pat)
-      else
-        CaseClassPattern(binder, ct, wrapSubPatterns(subPats, ct)).copiedFrom(pat)
+    case CaseClassPattern(_, ct, subPats) if Any1Ops.isAny(tpe) =>
+      CaseClassPattern(None, Any1Ops.wrapperTypeFor(ct), Seq(wrapPattern(pat, ct))).copiedFrom(pat)
 
-    case TuplePattern(binder, subPatterns) =>
-      pat // FIXME: What do we do with those?
+    case CaseClassPattern(binder, ct, subPats) =>
+      val newClassType = Any1Ops.mapAnyToAny1(ct).asInstanceOf[CaseClassType]
+      binder map { id => id.setType(Any1Ops.mapAnyToAny1(id.getType)) }
+      CaseClassPattern(binder, newClassType, wrapSubPatterns(subPats, ct)).copiedFrom(pat)
+
+    case TuplePattern(binder, subPats) =>
+      val newBinder = binder map { id => id.setType(Any1Ops.mapAnyToAny1(id.getType)) }
+      val newSubPatterns = subPats map (p => wrapPattern(p, Untyped))
+      TuplePattern(newBinder, newSubPatterns)
 
     case WildcardPattern(binder) =>
-      pat // FIXME: Make sure there's nothing to do here
+      val newBinder = binder map { id => id.setType(Any1Ops.mapAnyToAny1(id.getType)) }
+      WildcardPattern(newBinder)
   }
 
   def wrapSubPatterns(subPatterns: Seq[Pattern], ct: ClassType): Seq[Pattern] = {
