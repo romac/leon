@@ -39,7 +39,7 @@ case class PrinterPhase(header: String) extends TransformationPhase {
       "#" * (header.length + 4) + "\n" +
       "# " + header + " #" + "\n" +
       "#" * (header.length + 4) + "\n" +
-      PrettyPrinter(p, opts)
+      ScalaPrinter(p, opts)
     )
 
     p
