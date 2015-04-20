@@ -109,6 +109,10 @@ object WrapAnyExprs extends TransformationPhase {
       val newVTpe = Any1Ops.mapAnyToAny1(vTpe)
       EmptyMap(newKTpe, newVTpe).copiedFrom(em)
 
+    case cc @ CaseClass(ccTpe, args) =>
+      val tpe = Any1Ops.mapAnyToAny1(ccTpe).asInstanceOf[CaseClassType]
+      CaseClass(tpe, args.map(a => wrapExpr(a, a.getType))).copiedFrom(cc)
+
     case t: Terminal if Any1Ops.shouldWrap(e, tpe) =>
       Any1Ops.wrap(t)
 
