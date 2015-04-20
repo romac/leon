@@ -141,14 +141,14 @@ sealed abstract class ListAny {
     chunk0(s, this, Nil(), Nil(), s)
   }
 
-  def zip(that: ListAny): ListAny = { (this, that) match {
-    case (Cons(h1, t1), Cons(h2, t2)) =>
-      Cons((h1, h2), t1.zip(t2))
-    case (_) =>
-      Nil()
-  }} ensuring { _.size == (
-    if (this.size <= that.size) this.size else that.size
-  )}
+  // def zip(that: ListAny): ListAny = { (this, that) match {
+  //   case (Cons(h1, t1), Cons(h2, t2)) =>
+  //     Cons((h1, h2), t1.zip(t2))
+  //   case (_) =>
+  //     Nil()
+  // }} ensuring { _.size == (
+  //   if (this.size <= that.size) this.size else that.size
+  // )}
 
   def -(e: Any): ListAny = { this match {
     case Cons(h, t) =>
@@ -242,19 +242,19 @@ sealed abstract class ListAny {
       Cons(h, t.unique - h)
   }
 
-  def splitAt(e: Any): ListAny = split(Cons(e, Nil()))
+  // def splitAt(e: Any): ListAny = split(Cons(e, Nil()))
 
-  def split(seps: ListAny): ListAny = this match {
-    case Cons(h, t) =>
-      if (seps.contains(h)) {
-        Cons(Nil(), t.split(seps))
-      } else {
-        val Cons(rh: ListAny, rt) = t.split(seps)
-        Cons(Cons(h, rh), rt)
-      }
-    case Nil() =>
-      Cons(Nil(), Nil())
-  }
+  // def split(seps: ListAny): ListAny = this match {
+  //   case Cons(h, t) =>
+  //     if (seps.contains(h)) {
+  //       Cons(Nil(), t.split(seps))
+  //     } else {
+  //       val Cons(rh: ListAny, rt) = t.split(seps)
+  //       Cons(Cons(h, rh), rt)
+  //     }
+  //   case Nil() =>
+  //     Cons(Nil(), Nil())
+  // }
 
   def count(e: Any): BigInt = this match {
     case Cons(h, t) =>
