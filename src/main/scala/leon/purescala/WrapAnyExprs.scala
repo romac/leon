@@ -15,6 +15,8 @@ import TypeOps._
 // TODO:
 // - Gracefully handle possible errors (ie. when getting wrapper type or casting)
 // - Make sure there's no problem with TypedFunDef's param member being a lazy val instead of a def
+// - Extract re-usable part into TransformWithType tranformation
+// - Make sure we map Any to Any1 wherever needed
 
 object WrapAnyExprs extends TransformationPhase {
 
@@ -92,8 +94,8 @@ object WrapAnyExprs extends TransformationPhase {
     case ld @ LetDef(tfd, body) =>
       LetDef(tfd, wrapExpr(body, tfd.returnType)).copiedFrom(ld)
 
-    case v @ Variable(id) if id.getType == AnyType =>
-      v.id.setType(Any1Ops.classType)
+    case v @ Variable(id) =>
+      v.id.setType(Any1Ops.mapAnyToAny1(v.id.getType))
       v
 
     case es @ EmptySet(tpe) =>
