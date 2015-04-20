@@ -19,21 +19,14 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
 
   def apply(ctx: LeonContext, program: Program): Program = {
 
-    // TODO: Keep track of functions that returns Any and replace their invocations
-    def transformType(t: TypeTree): Option[TypeTree] = t match {
-      case AnyType => Some(Any1Ops.classType)
-      case t       => None
-    }
-
-    // FIXME: We don't need to return an Option since we mutate the type directly.
     def transformValDef(vd: ValDef): Unit = {
-        val newTpe = mapType(transformType)(vd.getType)
+        val newTpe = Any1Ops.mapAnyToAny1(vd.getType)
         if (newTpe != vd.getType)
           vd.id.setType(newTpe)
     }
 
     def replaceTypes(fd: FunDef): Option[FunDef] = {
-      val retType = mapType(transformType)(fd.returnType)
+      val retType = Any1Ops.mapAnyToAny1(fd.returnType)
 
       fd.params foreach transformValDef
 

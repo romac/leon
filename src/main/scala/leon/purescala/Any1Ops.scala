@@ -65,4 +65,11 @@ object Any1Ops {
     case Some(parent) => rootClassDef(parent.classDef)
   }
 
+  def anyToAny1(t: TypeTree): Option[TypeTree] = t match {
+    case AnyType => Some(Any1Ops.classType)
+    case t       => None
+  }
+
+  def mapAnyToAny1(t: TypeTree): TypeTree =
+    mapType(anyToAny1)(t)
 }
