@@ -23,6 +23,18 @@ object TypeOps {
       }
   }
 
+  def foldType[T](f: (TypeTree, Seq[T]) => T)(t: TypeTree): T = {
+    val rec = foldType(f) _
+
+    t match {
+      case n @ NAryType(tps, builder) =>
+        f(n, tps.view.map(rec))
+    }
+  }
+
+  def typeExists(matcher: TypeTree => Boolean)(t: TypeTree): Boolean =
+    foldType[Boolean]({ (t, subs) => matcher(t) || subs.contains(true) })(t)
+
   def typeDepth(t: TypeTree): Int = t match {
     case NAryType(tps, builder) => 1+tps.foldLeft(0) { case (d, t) => d max typeDepth(t) }
   }

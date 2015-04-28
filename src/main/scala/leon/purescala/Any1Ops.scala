@@ -65,7 +65,16 @@ object Any1Ops {
     case Some(parent) => rootClassDef(parent.classDef)
   }
 
-  def anyToAny1(t: TypeTree): Option[TypeTree] = t match {
+  def typeContainsAny(t: TypeTree): Boolean =
+    typeExists(Any1Ops.isAny)(t)
+
+  def mapTypeAnyToAny1(t: TypeTree, force: Boolean = false): TypeTree =
+    if (force || typeContainsAny(t))
+      mapType(anyToAny1)(t)
+    else
+      t
+
+  private def anyToAny1(t: TypeTree): Option[TypeTree] = t match {
     case AnyType => Some(Any1Ops.classType)
     case t       => None
   }
