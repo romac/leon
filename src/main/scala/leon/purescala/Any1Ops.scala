@@ -9,24 +9,23 @@ import Expressions._
 import Types._
 import TypeOps._
 
-// TODO: Figure out why no warning are raised if we don't match on Unexpected
 object Any1Ops {
 
-  val classDef      = AbstractClassDef(FreshIdentifier("Any1"), Seq(), None)
-  val classType     = AbstractClassType(classDef, Seq())
-  val unexpectedDef = registerChild(CaseClassDef(FreshIdentifier("Any1Unexpected"), Seq(), Some(classType), true))
-  val moduleDef     = ModuleDef(FreshIdentifier("Any1$Module"), Seq(classDef, unexpectedDef), false)
+  lazy val classDef      = AbstractClassDef(FreshIdentifier("Any1"), Seq(), None)
+  lazy val classType     = AbstractClassType(classDef, Seq())
+  lazy val moduleDef     = ModuleDef(FreshIdentifier("Any1$Module"), Seq(classDef, unexpectedDef), false)
+  lazy val unexpectedDef = {
+    val classDef = CaseClassDef(FreshIdentifier("Any1Unexpected"), Seq(), Some(classType), true)
+    registerChild(classDef)
+  }
 
-  private var wrapperMap = Map[ClassDef, CaseClassDef]()
+  private var wrappers = Map[ClassDef, CaseClassDef]()
 
   def registerWrapper(cd: ClassDef, wrapper: CaseClassDef): Unit =
-    wrapperMap += cd -> wrapper
+    wrappers += cd -> wrapper
 
-  def getWrapperFor(cd: ClassDef): Option[CaseClassDef] =
-    wrapperMap get cd
-
-  def wrapperFor(cd: ClassDef): CaseClassDef =
-    wrapperMap(cd)
+  def hasWrapper(tpe: ClassType): Boolean =
+    wrappers contains rootClassDef(tpe.classDef)
 
   def registerChild(child: ClassDef): ClassDef = {
     classDef.registerChildren(child)
@@ -39,29 +38,26 @@ object Any1Ops {
   def isAny1(tpe: TypeTree): Boolean =
     tpe == classType
 
-  def isAnyFunDef(fd: FunDef): Boolean =
-    isAny(fd.returnType) || fd.params.exists(p => isAny(p.getType))
-
-  def shouldWrap(e: Expr, tpe: TypeTree): Boolean =
-    isAny(tpe) && !isAny1(e.getType)
-
   def wrap(e: Expr): Expr = e.getType match {
-    // case AnyType => e
-    // case Untyped => e // FIXME: Figure out what to do here
-    // case tpe: TypeParameter => e
-    case tpe: ClassType if wrapperMap contains rootClassDef(tpe.classDef) =>
+    // TODO: Raise an error
+    case tpe: TypeParameter => e
+
+    case tpe: ClassType if hasWrapper(tpe) =>
       CaseClass(wrapperTypeFor(tpe), Seq(e))
-    case _  => e
+
+    case tpe =>
+      println(s"warning: no wrapper for type $tpe")
+      e
   }
 
   def wrapperTypeFor(tpe: ClassType): CaseClassType = {
     val rootClass = rootClassDef(tpe.classDef)
-    val any1Cd = wrapperMap(rootClass)
+    val any1Cd = wrappers(rootClass)
     classDefToClassType(any1Cd).asInstanceOf[CaseClassType]
   }
 
-  def rootClassDef(cd: ClassDef): ClassDef = cd.parent match {
-    case None => cd
+  private def rootClassDef(cd: ClassDef): ClassDef = cd.parent match {
+    case None         => cd
     case Some(parent) => rootClassDef(parent.classDef)
   }
 
@@ -76,9 +72,7 @@ object Any1Ops {
 
   private def anyToAny1(t: TypeTree): Option[TypeTree] = t match {
     case AnyType => Some(Any1Ops.classType)
-    case t       => None
+    case _       => None
   }
 
-  def mapAnyToAny1(t: TypeTree): TypeTree =
-    mapType(anyToAny1)(t)
 }

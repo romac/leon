@@ -20,13 +20,13 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
   def apply(ctx: LeonContext, program: Program): Program = {
 
     def transformValDef(vd: ValDef): Unit = {
-        val newTpe = Any1Ops.mapAnyToAny1(vd.getType)
-        if (newTpe != vd.getType)
-          vd.id.setType(newTpe)
+      val newTpe = Any1Ops.mapTypeAnyToAny1(vd.getType)
+      if (newTpe != vd.getType)
+        vd.id.setType(newTpe)
     }
 
     def replaceTypes(fd: FunDef): Option[FunDef] = {
-      val retType = Any1Ops.mapAnyToAny1(fd.returnType)
+      val retType = Any1Ops.mapTypeAnyToAny1(fd.returnType)
 
       fd.params foreach transformValDef
 
