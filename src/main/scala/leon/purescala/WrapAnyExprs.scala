@@ -133,17 +133,21 @@ object WrapAnyExprs extends TransformationPhase {
     case _ => e
   }
 
-  def wrapPattern(pat: Pattern, tpe: TypeTree): Pattern = pat match {
-    case InstanceOfPattern(binder, ct) if Any1Ops.isAny(tpe) =>
+  def wrapPattern(pat: Pattern, scrutTpe: TypeTree): Pattern = pat match {
+    case InstanceOfPattern(binder, ct) if Any1Ops.isAny(scrutTpe) =>
       CaseClassPattern(None, Any1Ops.wrapperTypeFor(ct), Seq(pat)).copiedFrom(pat)
 
-    case CaseClassPattern(_, ct, subPats) if Any1Ops.isAny(tpe) =>
+    case CaseClassPattern(_, ct, subPats) if Any1Ops.isAny(scrutTpe) =>
       CaseClassPattern(None, Any1Ops.wrapperTypeFor(ct), Seq(wrapPattern(pat, ct))).copiedFrom(pat)
 
     case CaseClassPattern(binder, ct, subPats) =>
       val newClassType = Any1Ops.mapTypeAnyToAny1(ct).asInstanceOf[CaseClassType]
       binder map (id => id.setType(Any1Ops.mapTypeAnyToAny1(id.getType)))
       CaseClassPattern(binder, newClassType, wrapSubPatterns(subPats, ct)).copiedFrom(pat)
+
+    case PrimitivePattern(binder, tpe) => // scrutTpe should always be Any in that case
+      val wrapperType = Any1Ops.wrapperTypeFor(tpe)
+      CaseClassPattern(None, wrapperType, Seq(WildcardPattern(binder).copiedFrom(pat))).copiedFrom(pat)
 
     case TuplePattern(binder, subPats) =>
       val newBinder = binder map (id => id.setType(Any1Ops.mapTypeAnyToAny1(id.getType)))
@@ -153,11 +157,17 @@ object WrapAnyExprs extends TransformationPhase {
     case WildcardPattern(binder) =>
       val newBinder = binder map (id => id.setType(Any1Ops.mapTypeAnyToAny1(id.getType)))
       WildcardPattern(newBinder).copiedFrom(pat)
+
+    case LiteralPattern(binder, lit) if Any1Ops.isAny(scrutTpe) =>
+      val wrapperType = Any1Ops.wrapperTypeFor(lit.getType)
+      CaseClassPattern(None, wrapperType, Seq(pat)).copiedFrom(pat)
+
+    case _ => pat
   }
 
   def wrapSubPatterns(subPatterns: Seq[Pattern], ct: ClassType): Seq[Pattern] = {
-    subPatterns.zip(ct.fieldsTypes) map { case (pat, tpe) =>
-      wrapPattern(pat, tpe)
+    subPatterns.zip(ct.fieldsTypes) map { case (pat, scrutTpe) =>
+      wrapPattern(pat, scrutTpe)
     }
   }
 

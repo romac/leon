@@ -5,10 +5,14 @@ object primitives {
 
   val anInt: Any = 42
 
-  // def plus1(x: Any): Any = x match {
-  //   case i: Int => i + 1
-  //   case _ => 0
-  // }
+  def doStuff(x: Any): Any = x match {
+    case 12 => 13
+    case i: Int => i + 1
+    case c: Char => c
+    case b: Boolean => !b
+    // case (x: Int, y: Int) => (x + 1) + (y + 1)
+    // case _ => 0
+  }
 
   def swap(t: (Any, Any)): (Any, Any) = t match {
     case (x, y) => (y, x)

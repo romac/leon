@@ -782,6 +782,8 @@ object ExprOps {
           and(bind(ob, in) +: subTests: _*)
         }
         case LiteralPattern(ob,lit) => and(Equals(in,lit), bind(ob,in))
+        case PrimitivePattern(_, _) =>
+          sys.error("Oops, PrimitivePatterns should have disappeared during phase DesugarAny")
       }
     }
 
@@ -816,6 +818,8 @@ object ExprOps {
     }
     case LiteralPattern(None, lit) => Map()
     case LiteralPattern(Some(id), lit) => Map(id -> in)
+    case PrimitivePattern(_, _) =>
+      sys.error("Oops, PrimitivePatterns should have disappeared during phase DesugarAny")
   }
 
   /** Rewrites all pattern-matching expressions into if-then-else expressions,
@@ -937,6 +941,8 @@ object ExprOps {
         val e = CaseClass(cct, subs zip subTypes map { case (sub,tp) => rec(sub,tp) })
         addBinding(b, e)
         e
+      case PrimitivePattern(_, _) =>
+        sys.error("Oops, PrimitivePatterns should have disappeared during phase DesugarAny")
     }
 
     (rec(p, expectedType), ieMap)
@@ -2163,7 +2169,8 @@ object ExprOps {
               } else {
                 LiteralPattern(ob,lit) 
               }
-                
+            case PrimitivePattern(_, _) =>
+              sys.error("Oops, PrimitivePatterns should have disappeared during phase DesugarAny")
           }
 
           val newCases = resCases.flatMap {

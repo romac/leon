@@ -201,6 +201,10 @@ object Expressions {
 
   case class TuplePattern(binder: Option[Identifier], subPatterns: Seq[Pattern]) extends Pattern
 
+  case class PrimitivePattern(binder: Option[Identifier], tpe: TypeTree) extends Pattern { // eg. i: Int
+    val subPatterns = Seq()
+  }
+
   case class LiteralPattern[+T](binder: Option[Identifier], lit : Literal[T]) extends Pattern {
     val subPatterns = Seq()    
   }

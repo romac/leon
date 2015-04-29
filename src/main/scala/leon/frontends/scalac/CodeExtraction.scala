@@ -959,7 +959,7 @@ trait CodeExtraction extends ASTExtractors {
             (InstanceOfPattern(binder, ct).setPos(p.pos), dctx)
 
           case lt =>
-            outOfSubsetError(tpt, "Invalid type "+tpt.tpe+" for .isInstanceOf")
+            (PrimitivePattern(binder, lt).setPos(p.pos), dctx)
         }
 
       case Ident(nme.WILDCARD) =>
@@ -971,8 +971,9 @@ trait CodeExtraction extends ASTExtractors {
           case ct: CaseClassType =>
             assert(ct.classDef.fields.size == 0)
             (CaseClassPattern(binder, ct, Seq()).setPos(p.pos), dctx)
-          case _ =>
-            outOfSubsetError(s, "Invalid type "+s.tpe+" for .isInstanceOf")
+
+          case lt =>
+            (PrimitivePattern(binder, lt).setPos(p.pos), dctx)
         }
 
       case a @ Apply(fn, args) =>
