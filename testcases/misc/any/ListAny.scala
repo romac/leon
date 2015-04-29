@@ -6,7 +6,6 @@ import leon.lang._
 import leon.collection._
 import leon.annotation._
 
-// @library
 sealed abstract class ListAny {
 
   def size: BigInt = (this match {
@@ -222,12 +221,12 @@ sealed abstract class ListAny {
     }
   }
 
-  def lastOption: Option[Any] = this match {
-    case Cons(h, t) =>
-      t.lastOption.orElse(Some(h))
-    case Nil() =>
-      None()
-  }
+  // def lastOption: Option[Any] = this match {
+  //   case Cons(h, t) =>
+  //     t.lastOption.orElse(Some(h))
+  //   case Nil() =>
+  //     None()
+  // }
 
   def firstOption: Option[Any] = this match {
     case Cons(h, t) =>
@@ -244,17 +243,17 @@ sealed abstract class ListAny {
 
   // def splitAt(e: Any): ListAny = split(Cons(e, Nil()))
 
-  // def split(seps: ListAny): ListAny = this match {
-  //   case Cons(h, t) =>
-  //     if (seps.contains(h)) {
-  //       Cons(Nil(), t.split(seps))
-  //     } else {
-  //       val Cons(rh: ListAny, rt) = t.split(seps)
-  //       Cons(Cons(h, rh), rt)
-  //     }
-  //   case Nil() =>
-  //     Cons(Nil(), Nil())
-  // }
+  def split(seps: ListAny): ListAny = this match {
+    case Cons(h, t) =>
+      if (seps.contains(h)) {
+        Cons(Nil(), t.split(seps))
+      } else {
+        val Cons(rh: ListAny, rt) = t.split(seps)
+        Cons(Cons(h, rh), rt)
+      }
+    case Nil() =>
+      Cons(Nil(), Nil())
+  }
 
   def count(e: Any): BigInt = this match {
     case Cons(h, t) =>
@@ -315,10 +314,75 @@ sealed abstract class ListAny {
     case Nil() => true
     case _ => false
   }
-}
 
-case class Cons(h: Any, t: ListAny) extends ListAny
-case class Nil() extends ListAny
+  // Higher-order API
+  def map(f: Any => Any): ListAny = { this match {
+    case Nil() => Nil()
+    case Cons(h, t) => f(h) :: t.map(f)
+  }} ensuring { _.size == this.size}
+
+  def foldLeft[R](z: R)(f: (Any, Any) => R): R = this match {
+    case Nil() => z
+    case Cons(h,t) => t.foldLeft(f(z,h))(f)
+  }
+
+  // def foldRight[R](f: (Any, Any) => R)(z: R): R = this match {
+  //   case Nil() => z
+  //   case Cons(h, t) => f(h, t.foldRight(f)(z))
+  // }
+
+  // def scanLeft[R](z: R)(f: (Any, Any) => R): ListAny = this match {
+  //   case Nil() => z :: Nil()
+  //   case Cons(h,t) => z :: t.scanLeft(f(z,h))(f)
+  // }
+
+  // def scanRight[R](f: (Any, Any) => R)(z: R): ListAny = { this match {
+  //   case Nil() => z :: Nil()
+  //   case Cons(h, t) =>
+  //     val rest@Cons(h1,_) = t.scanRight(f)(z)
+  //     f(h, h1) :: rest
+  // }} ensuring { !_.isEmpty }
+
+  def flatMap(f: Any => ListAny): ListAny =
+    ListAnyOps.flatten(this map f)
+
+  def filter(p: Any => Boolean): ListAny = { this match {
+    case Nil() => Nil()
+    case Cons(h, t) if p(h) => Cons(h, t.filter(p))
+    case Cons(_, t) => t.filter(p)
+  }} ensuring { res => res.size <= this.size && res.forall(p) }
+
+  // In case we implement for-comprehensions
+  def withFilter(p: Any => Boolean) = filter(p)
+
+  def forall(p: Any => Boolean): Boolean = this match {
+    case Nil() => true
+    case Cons(h, t) => p(h) && t.forall(p)
+  }
+
+  def exists(p: Any => Boolean) = !forall(!p(_))
+
+  def find(p: Any => Boolean): Option[Any] = { this match {
+    case Nil() => None()
+    case Cons(h, t) if p(h) => Some(h)
+    case Cons(_, t) => t.find(p)
+  }} ensuring { _.isDefined == exists(p) }
+
+  // FIXME: I keep getting these weird type errors
+  //def groupBy(f: Any => Any): Map[Any, ListAny] = this match {
+  //  case Nil() => Map.empty[Any, ListAny]
+  //  case Cons(h, t) =>
+  //    val key: Any = f(h)
+  //    val rest: Map[Any, ListAny] = t.groupBy(f)
+  //    val prev: ListAny = if (rest isDefinedAt key) rest(key) else Nil()
+  //    (rest ++ Map((key, h :: prev))) : Map[Any, ListAny]
+  //}
+
+  def takeWhile(p: Any => Boolean): ListAny = { this match {
+    case Cons(h,t) if p(h) => Cons(h, t.takeWhile(p))
+    case _ => Nil()
+  }} ensuring { _ forall p }
+}
 
 @ignore
 object ListAny {
@@ -353,5 +417,114 @@ object ListAnyOps {
   //       Cons(h, insSort(t, v))
   //     }
   // }
-
 }
+
+case class Cons(h: Any, t: ListAny) extends ListAny
+case class Nil() extends ListAny
+
+// @library
+// object ListSpecs {
+//   def snocIndex(l : ListAny, t Any, i : BigInt) : Boolean = {
+//     require(0 <= i && i < l.size + 1)
+//     // proof:
+//     (l match {
+//       case Nil() => true
+//       case Cons(x, xs) => if (i > 0) snocIndex(xs, t, i-1) else true
+//     }) &&
+//     // claim:
+//     ((l :+ t).apply(i) == (if (i < l.size) l(i) else t))
+//   }.holds
+
+//   def reverseIndex(l : ListAny, i : BigInt) : Boolean = {
+//     require(0 <= i && i < l.size)
+//     (l match {
+//       case Nil() => true
+//       case Cons(x,xs) => snocIndex(l, x, i) && reverseIndex(l,i)
+//     }) &&
+//     (l.reverse.apply(i) == l.apply(l.size - 1 - i))
+//   }.holds
+
+//   def appendIndex(l1 : ListAny, l2 : ListAny, i : BigInt) : Boolean = {
+//     require(0 <= i && i < l1.size + l2.size)
+//     (l1 match {
+//       case Nil() => true
+//       case Cons(x,xs) => if (i==BigInt(0)) true else appendIndex(xs,l2,i-1)
+//     }) &&
+//     ((l1 ++ l2).apply(i) == (if (i < l1.size) l1(i) else l2(i - l1.size)))
+//   }.holds
+
+//   def appendAssoc(l1 : ListAny, l2 : ListAny, l3 : ListAny) : Boolean = {
+//     (l1 match {
+//       case Nil() => true
+//       case Cons(x,xs) => appendAssoc(xs,l2,l3)
+//     }) &&
+//     (((l1 ++ l2) ++ l3) == (l1 ++ (l2 ++ l3)))
+//   }.holds
+
+//   def snocIsAppend(l : ListAny, t Any) : Boolean = {
+//     (l match {
+//       case Nil() => true
+//       case Cons(x,xs) =>  snocIsAppend(xs,t)
+//     }) &&
+//     ((l :+ t) == l ++ Cons(t, Nil()))
+//   }.holds
+
+//   def snocAfterAppend(l1 : ListAny, l2 : ListAny, t Any) : Boolean = {
+//     (l1 match {
+//       case Nil() => true
+//       case Cons(x,xs) =>  snocAfterAppend(xs,l2,t)
+//     }) &&
+//     ((l1 ++ l2) :+ t == (l1 ++ (l2 :+ t)))
+//   }.holds
+
+//   def snocReverse(l : ListAny, t Any) : Boolean = {
+//     (l match {
+//       case Nil() => true
+//       case Cons(x,xs) => snocReverse(xs,t)
+//     }) &&
+//     ((l :+ t).reverse == Cons(t, l.reverse))
+//   }.holds
+
+//   def reverseReverse(l : ListAny) : Boolean = {
+//     (l match {
+//       case Nil() => true
+//       case Cons(x,xs) => reverseReverse(xs) && snocReverse(xs.reverse, x)
+//     }) &&
+//     (l.reverse.reverse == l)
+//   }.holds
+
+  //// my hand calculation shows this should work, but it does not seem to be found
+  //def reverseAppend(l1 : ListAny, l2 : ListAny) : Boolean = {
+  //  (l1 match {
+  //    case Nil() => true
+  //    case Cons(x,xs) => {
+  //      reverseAppend(xs,l2) &&
+  //      snocAfterAppend(l2.reverse, xs.reverse, x) &&
+  //      l1.reverse == (xs.reverse :+ x)
+  //    }
+  //  }) &&
+  //  ((l1 ++ l2).reverse == (l2.reverse ++ l1.reverse))
+  //}.holds
+
+  //@induct
+  //def folds(l : ListAny, z : Any, f : (Any, Any) => Any) = {
+  //  { l match {
+  //    case Nil() => true
+  //    case Cons(h,t) => snocReverse(t, h)
+  //  }} &&
+  //  l.foldLeft(z)(f) == l.reverse.foldRight((x:Any,y:R) => f(y,x))(z)
+  //}.holds
+  //
+
+  //Can't prove this
+  //@induct
+  //def scanVsFoldLeft[A,B](l : List[A], z: B, f: (B,A) => B): Boolean = {
+  //  l.scanLeft(z)(f).last == l.foldLeft(z)(f)
+  //}.holds
+
+  // @induct
+  // def scanVsFoldRight[A,B](l: List[A], z: B, f: (A,B) => B): Boolean = {
+  //   l.scanRight(f)(z).head == l.foldRight(f)(z)
+  // }.holds
+
+// }
