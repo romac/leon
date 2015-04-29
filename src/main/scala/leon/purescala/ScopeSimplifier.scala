@@ -83,6 +83,8 @@ class ScopeSimplifier extends Transformer {
             TuplePattern(newBinder, newSubPatterns)
           case LiteralPattern(_, lit) => 
             LiteralPattern(newBinder, lit)
+          case PrimitivePattern(_, tpe) =>
+            PrimitivePattern(newBinder, tpe)
         }
 
         (newPattern, curScope)
