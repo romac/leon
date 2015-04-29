@@ -57,6 +57,10 @@ object DefOps {
     .last._1
   }
 
+  def rootClassDef(cd: ClassDef): ClassDef = cd.parent match {
+    case None         => cd
+    case Some(parent) => rootClassDef(parent.classDef)
+  }
 
   /** Returns the set of definitions directly visible from the current definition
    *  Definitions that are shadowed by others are not returned.

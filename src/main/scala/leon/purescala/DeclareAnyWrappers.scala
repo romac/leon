@@ -18,28 +18,14 @@ object DeclareAnyWrappers extends TransformationPhase {
 
   def apply(ctx: LeonContext, program: Program): Program = {
 
-    def wrapClass(cd: ClassDef): CaseClassDef = {
-        val classDef  = CaseClassDef(FreshIdentifier("Any1$" + cd.id.name), Seq(), Some(Any1Ops.classType), false).setPos(cd)
-        val classType = classDefToClassType(classDef, Seq())
-
-        val valueId   = FreshIdentifier("value", classType).setPos(cd)
-        val field     = ValDef(valueId, Some(classDefToClassType(cd))).setPos(cd)
-
-        classDef.setFields(Seq(field))
-
-        Any1Ops.registerChild(classDef)
-        Any1Ops.registerWrapper(cd, classDef)
-
-        classDef
-    }
-
     def walkUnit(u: UnitDef): UnitDef = {
-      u.copy(modules = Any1Ops.moduleDef +: (u.modules map walkModule))
+      val modules = u.modules map walkModule
+      u.copy(modules = Any1Ops.moduleDef +: modules)
     }
 
     def walkModule(m: ModuleDef): ModuleDef = {
       val classesToWrap = m.classHierarchyRoots collect canBeWrapped
-      val wrapperDefs =  classesToWrap map wrapClass
+      val wrapperDefs =  classesToWrap map Any1Ops.wrapClass
 
       m.copy(defs = m.defs ++ wrapperDefs)
     }
