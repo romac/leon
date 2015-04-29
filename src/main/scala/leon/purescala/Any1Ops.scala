@@ -10,6 +10,8 @@ import Types._
 import TypeOps._
 import DefOps._
 
+import scala.collection.mutable.Map
+
 object Any1Ops {
 
   lazy val classDef      = AbstractClassDef(FreshIdentifier("Any1"), Seq(), None)
@@ -20,8 +22,8 @@ object Any1Ops {
     registerChild(classDef)
   }
 
-  private var classWrappers = Map[ClassDef, CaseClassDef]()
-  private var typeWrappers  = Map[TypeTree, CaseClassDef]()
+  private val classWrappers = Map[ClassDef, CaseClassDef]()
+  private val typeWrappers  = Map[TypeTree, CaseClassDef]()
 
   def registerWrapper(cd: ClassDef, wrapper: CaseClassDef): Unit =
     classWrappers += cd -> wrapper
@@ -61,9 +63,7 @@ object Any1Ops {
       CaseClass(wrapperTypeFor(tpe), Seq(e))
 
     case tpe if hasWrapper(tpe) =>
-      val wrapper = typeWrappers(tpe)
-      val wrapperType = classDefToClassType(wrapper).asInstanceOf[CaseClassType]
-      CaseClass(wrapperType, Seq(e))
+      CaseClass(wrapperTypeFor(tpe), Seq(e))
 
     case tpe =>
       wrapType(tpe)
@@ -74,6 +74,11 @@ object Any1Ops {
     val rootClass = rootClassDef(tpe.classDef)
     val any1Cd = classWrappers(rootClass)
     classDefToClassType(any1Cd).asInstanceOf[CaseClassType]
+  }
+
+  def wrapperTypeFor(tpe: TypeTree): CaseClassType = {
+    val wrapperDef = typeWrappers.getOrElseUpdate(tpe, wrapType(tpe))
+    classDefToClassType(wrapperDef).asInstanceOf[CaseClassType]
   }
 
   def typeContainsAny(t: TypeTree): Boolean =
