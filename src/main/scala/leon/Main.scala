@@ -9,6 +9,7 @@ object Main {
   lazy val allPhases: List[LeonPhase[_, _]] = {
     List(
       frontends.scalac.ExtractionPhase,
+      utils.PreprocessingPhase,
       utils.TypingPhase,
       FileOutputPhase,
       ScopingPhase,

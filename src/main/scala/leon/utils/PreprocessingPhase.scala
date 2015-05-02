@@ -17,12 +17,18 @@ object PreprocessingPhase extends TransformationPhase {
   val name = "preprocessing"
   val description = "Various preprocessings on Leon programs"
 
+  val optDesugarAny = LeonFlagOptionDef("any", "Enable support for Any", false)
+
+  override val definedOptions: Set[LeonOptionDef[Any]] = Set(optDesugarAny)
+
   def apply(ctx: LeonContext, p: Program): Program = {
+    val desugarAny = if (ctx.findOptionOrDefault(optDesugarAny)) DesugarAnyPhase
+                     else NoopPhase[Program]()
 
     val phases =
       ScopingPhase                  andThen
       MethodLifting                 andThen
-      DesugarAnyPhase               andThen
+      desugarAny                    andThen
       TypingPhase                   andThen
       ConvertWithOracle             andThen
       ConvertHoles                  andThen
