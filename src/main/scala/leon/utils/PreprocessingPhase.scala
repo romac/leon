@@ -6,7 +6,9 @@ package utils
 import purescala.Definitions.Program
 import purescala.ScalaPrinter
 
-import purescala.{MethodLifting, CompleteAbstractDefinitions, CheckADTFieldsTypes, DesugarAnyPhase}
+import purescala.{MethodLifting, CompleteAbstractDefinitions, CheckADTFieldsTypes}
+import purescala.{MethodLifting, CompleteAbstractDefinitions}
+import xlang.any.DesugarAnyPhase
 import synthesis.{ConvertWithOracle, ConvertHoles}
 import verification.InjectAsserts
 

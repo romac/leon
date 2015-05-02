@@ -13,6 +13,7 @@ import leon.purescala.Expressions._
 import leon.purescala.TypeOps.leastUpperBound
 import leon.purescala.Types._
 import leon.synthesis.Witnesses._
+import leon.xlang.any.Any1Ops
 
 case class PrinterContext(
   current: Tree,

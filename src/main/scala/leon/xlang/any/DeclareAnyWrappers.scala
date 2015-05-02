@@ -1,7 +1,9 @@
 
 package leon
-package purescala
+package xlang
+package any
 
+import leon.purescala._
 import Common._
 import Definitions._
 import Expressions._

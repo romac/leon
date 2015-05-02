@@ -1,7 +1,10 @@
 /* Copyright 2009-2015 EPFL, Lausanne */
 
 package leon
-package purescala
+package xlang
+package any
+
+import leon.purescala._
 
 import Definitions.Program
 
