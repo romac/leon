@@ -34,12 +34,6 @@ object Any1Ops {
     typeWrappers += tpe -> wrapper
   }
 
-  def hasWrapper(tpe: ClassType): Boolean =
-    classWrappers contains rootClassDef(tpe.classDef)
-
-  def hasWrapper(tpe: TypeTree): Boolean =
-    typeWrappers contains tpe
-
   def registerChild(child: ClassDef): ClassDef = {
     classDef.registerChildren(child)
     child
@@ -51,25 +45,18 @@ object Any1Ops {
   def isAny1(tpe: TypeTree): Boolean =
     tpe == classType
 
-  def wrap(e: Expr): Expr = e.getType match {
+  def wrap(expr: Expr): Expr = expr.getType match {
     // TODO: Raise an error
     case tpe: TypeParameter =>
       println(s"Error: Cannot wrap generic type $tpe.")
-      e
+      expr
 
-    case tpe: ClassType if !tpe.tps.isEmpty =>
+    case tpe: ClassType if tpe.tps.nonEmpty =>
       println(s"Error: Cannot wrap polymorphic class $tpe")
-      e
-
-    case tpe: ClassType if hasWrapper(tpe) =>
-      CaseClass(wrapperTypeFor(tpe), Seq(e))
-
-    case tpe if hasWrapper(tpe) =>
-      CaseClass(wrapperTypeFor(tpe), Seq(e))
+      expr
 
     case tpe =>
-      wrapType(tpe)
-      wrap(e)
+      CaseClass(wrapperTypeFor(tpe), Seq(expr))
   }
 
   def wrapperTypeFor(tpe: ClassType): CaseClassType = {
@@ -83,16 +70,14 @@ object Any1Ops {
     classDefToClassType(wrapperDef).asInstanceOf[CaseClassType]
   }
 
-  def typeContainsAny(t: TypeTree): Boolean =
-    typeExists(Any1Ops.isAny)(t)
+  def typeContainsAny(tpe: TypeTree): Boolean =
+    typeExists(Any1Ops.isAny)(tpe)
 
-  def mapTypeAnyToAny1(t: TypeTree, force: Boolean = false): TypeTree =
-    if (force || typeContainsAny(t))
-      mapType(anyToAny1)(t)
-    else
-      t
+  def mapTypeAnyToAny1(tpe: TypeTree, force: Boolean = false): TypeTree =
+    if (force || typeContainsAny(tpe)) mapType(anyToAny1)(tpe)
+    else tpe
 
-  private def anyToAny1(t: TypeTree): Option[TypeTree] = t match {
+  private def anyToAny1(tpe: TypeTree): Option[TypeTree] = tpe match {
     case AnyType => Some(Any1Ops.classType)
     case _       => None
   }
@@ -140,7 +125,7 @@ object Any1Ops {
     case Int32Type           => "Int"
     case BitVectorType(size) => "BitVector" + size
 
-    case _ if tpe == classType => "Any1"
+    case _ if isAny1(tpe) => "Any1"
 
     case t @ TupleType(bases) =>
       "Tuple" + t.dimension + "$" + (bases.map(typeName).mkString("_"))
