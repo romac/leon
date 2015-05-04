@@ -16,9 +16,7 @@ import TypeOps._
 
 // TODO:
 // - Gracefully handle possible errors (ie. when getting wrapper type or casting)
-// - Make sure there's no problem with TypedFunDef's param member being a lazy val instead of a def
 // - Extract re-usable part into TransformWithType tranformation
-// - Make sure we map Any to Any1 wherever needed
 
 object WrapAnyExprs extends TransformationPhase {
 
@@ -151,6 +149,12 @@ object WrapAnyExprs extends TransformationPhase {
       val wrapperType = Any1Ops.wrapperTypeFor(tpe)
       CaseClassPattern(None, wrapperType, Seq(WildcardPattern(binder).copiedFrom(pat))).copiedFrom(pat)
 
+    case TuplePattern(binder, subPats) if Any1Ops.isAny(scrutTpe) =>
+      val patType = patternType(pat)
+      val wrapperType = Any1Ops.wrapperTypeFor(patType)
+      val newPat = wrapPattern(pat, patType)
+      CaseClassPattern(None, wrapperType, Seq(newPat)).copiedFrom(pat)
+
     case TuplePattern(binder, subPats) =>
       val newBinder = binder map (id => id.setType(Any1Ops.mapTypeAnyToAny1(id.getType)))
       val newSubPatterns = subPats map (p => wrapPattern(p, Untyped))
@@ -164,7 +168,15 @@ object WrapAnyExprs extends TransformationPhase {
       val wrapperType = Any1Ops.wrapperTypeFor(lit.getType)
       CaseClassPattern(None, wrapperType, Seq(pat)).copiedFrom(pat)
 
-    case _ => pat
+  }
+
+  def patternType(pat: Pattern): TypeTree = pat match {
+    case LiteralPattern(binder, lit)           => binder.map(_.getType).getOrElse(lit.getType)
+    case WildcardPattern(binder)               => binder.map(_.getType).getOrElse(Any1Ops.classType)
+    case TuplePattern(binder, subPats)         => binder.map(_.getType).getOrElse(TupleType(subPats.map(patternType)))
+    case PrimitivePattern(binder, tpe)         => binder.map(_.getType).getOrElse(tpe)
+    case CaseClassPattern(binder, ct, subPats) => binder.map(_.getType).getOrElse(ct)
+    case InstanceOfPattern(binder, ct)         => binder.map(_.getType).getOrElse(ct)
   }
 
   def wrapSubPatterns(subPatterns: Seq[Pattern], ct: ClassType): Seq[Pattern] = {
