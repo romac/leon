@@ -59,15 +59,15 @@ object Any1Ops {
       CaseClass(wrapperTypeFor(tpe), Seq(expr))
   }
 
-  def wrapperTypeFor(tpe: ClassType): CaseClassType = {
-    val rootClass = rootClassDef(tpe.classDef)
-    val any1Cd = classWrappers(rootClass)
-    classDefToClassType(any1Cd).asInstanceOf[CaseClassType]
-  }
+  def wrapperTypeFor(tpe: TypeTree): CaseClassType = tpe match {
+    case cTpe: ClassType =>
+      val rootClass = rootClassDef(cTpe.classDef)
+      val wrapperDef = classWrappers.getOrElseUpdate(rootClass, wrapClass(rootClass))
+      classDefToClassType(wrapperDef).asInstanceOf[CaseClassType]
 
-  def wrapperTypeFor(tpe: TypeTree): CaseClassType = {
-    val wrapperDef = typeWrappers.getOrElseUpdate(tpe, wrapType(tpe))
-    classDefToClassType(wrapperDef).asInstanceOf[CaseClassType]
+    case _ =>
+      val wrapperDef = typeWrappers.getOrElseUpdate(tpe, wrapType(tpe))
+      classDefToClassType(wrapperDef).asInstanceOf[CaseClassType]
   }
 
   def typeContainsAny(tpe: TypeTree): Boolean =

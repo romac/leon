@@ -6,7 +6,7 @@ package any
 
 import leon.purescala._
 
-import Definitions.Program
+import Definitions.{Program, UnitDef}
 
 object DesugarAnyPhase extends TransformationPhase {
 
@@ -16,12 +16,26 @@ object DesugarAnyPhase extends TransformationPhase {
   def apply(ctx: LeonContext, p: Program): Program = {
 
     val phases =
-      DeclareAnyWrappers     andThen
       ReplaceTypeAnyWithAny1 andThen
       WrapAnyExprs           andThen
+      AddModuleAnyToUnit     andThen
       PrinterPhase(name)
 
     phases.run(ctx)(p)
+  }
+
+  object AddModuleAnyToUnit extends TransformationPhase {
+    val name = "Add Module Any"
+    val description = "Add module Any to program's unit"
+
+    // FIXME: Should add a new unit for Any, rather than a module per unit.
+    def apply(ctx: LeonContext, program: Program): Program = {
+      def walkUnit(unit: UnitDef): UnitDef = {
+        unit.copy(modules = Any1Ops.moduleDef +: unit.modules)
+      }
+
+      program.copy(units = program.units map walkUnit)
+    }
   }
 }
 
