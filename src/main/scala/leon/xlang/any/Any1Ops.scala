@@ -18,7 +18,12 @@ object Any1Ops {
 
   lazy val classDef      = AbstractClassDef(FreshIdentifier("Any1"), Seq(), None)
   lazy val classType     = AbstractClassType(classDef, Seq())
-  lazy val moduleDef     = ModuleDef(FreshIdentifier("Any1$Module"), Seq(classDef, unexpectedDef), false)
+
+  lazy val moduleDef     = {
+    val classDefs = Seq(classDef, unexpectedDef) ++ classWrappers.values ++ typeWrappers.values
+    ModuleDef(FreshIdentifier("Any1$Module"), classDefs, false)
+  }
+
   lazy val unexpectedDef = {
     val classDef = CaseClassDef(FreshIdentifier("Any1Unexpected"), Seq(), Some(classType), true)
     registerChild(classDef)
