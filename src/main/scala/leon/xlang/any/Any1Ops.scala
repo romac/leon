@@ -50,18 +50,39 @@ object Any1Ops {
   def isAny1(tpe: TypeTree): Boolean =
     tpe == classType
 
-  def wrap(expr: Expr): Expr = expr.getType match {
-    // TODO: Raise an error
-    case tpe: TypeParameter =>
-      println(s"Error: Cannot wrap generic type $tpe.")
+  def wrap(expr: Expr)(implicit ctx: LeonContext): Expr = {
+    if (!isWrappable(expr.getType)) {
+      ctx.reporter.error(s"Cannot treat value of type ${expr.getType} as Any")
       expr
+    }
+    else
+      CaseClass(wrapperTypeFor(expr.getType), Seq(expr))
+  }
+
+  def isWrappable(tpe: TypeTree): Boolean = tpe match {
+    case tpe: TypeParameter =>
+      false
 
     case tpe: ClassType if tpe.tps.nonEmpty =>
-      println(s"Error: Cannot wrap polymorphic class $tpe")
-      expr
+      false
 
-    case tpe =>
-      CaseClass(wrapperTypeFor(tpe), Seq(expr))
+    case SetType(base) if typeContainsAny(base) =>
+      false
+
+    case MultisetType(base) if typeContainsAny(base) =>
+      false
+
+    case MapType(from, to) if typeContainsAny(from) || typeContainsAny(to) =>
+      false
+
+    case ArrayType(base) if typeContainsAny(base) =>
+      false
+
+    case FunctionType(from, to) if from.exists(typeContainsAny) || typeContainsAny(to) =>
+      false
+
+    case _ =>
+      true
   }
 
   def wrapperTypeFor(tpe: TypeTree): CaseClassType = tpe match {
