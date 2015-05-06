@@ -5,9 +5,11 @@
 [x] Check WrapAnyExprs and ReplaceAnyWithAny to ensure they traverse lambda and pre-postconditions.
 [x] Check why preTraversal doesn't traverse lambda and check explicitely the arguments.
 
-[ ] Figure out why there are still instances of Any (most likely in types).
+[x] Figure out why there are still instances of Any (most likely in types).
 
-[~] Write ListAny library.
+[x] Write ListAny library.
 [x] Add support for higher order functions.
 
-[ ] ScalaJS - Purely Dynamic.
+[ ] Disallow wrapping Sets of Any (same for Arrays and Maps)
+[ ] Modify verification report to strip Any1 wrappers from the output
+[ ] Have Any1 extend Dynamic, define define selectDynamic() etc. + other operations (see https://github.com/scala-js/scala-js/blob/master/library/src/main/scala/scala/scalajs/js/Dynamic.scala)
