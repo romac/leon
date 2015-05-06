@@ -170,15 +170,6 @@ object WrapAnyExprs extends TransformationPhase {
 
   }
 
-  def patternType(pat: Pattern): TypeTree = pat match {
-    case LiteralPattern(binder, lit)           => binder.map(_.getType).getOrElse(lit.getType)
-    case WildcardPattern(binder)               => binder.map(_.getType).getOrElse(Any1Ops.classType)
-    case TuplePattern(binder, subPats)         => binder.map(_.getType).getOrElse(TupleType(subPats.map(patternType)))
-    case PrimitivePattern(binder, tpe)         => binder.map(_.getType).getOrElse(tpe)
-    case CaseClassPattern(binder, ct, subPats) => binder.map(_.getType).getOrElse(ct)
-    case InstanceOfPattern(binder, ct)         => binder.map(_.getType).getOrElse(ct)
-  }
-
   def wrapSubPatterns(subPatterns: Seq[Pattern], ct: ClassType): Seq[Pattern] = {
     subPatterns.zip(ct.fieldsTypes) map { case (pat, scrutTpe) =>
       wrapPattern(pat, scrutTpe)

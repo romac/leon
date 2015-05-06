@@ -883,7 +883,19 @@ object ExprOps {
   def passesPathConditions(p : Passes, pathCond: List[Expr]) : Seq[List[Expr]] = {
     matchCasePathConditions(MatchExpr(p.in, p.cases), pathCond)
   }
-  
+
+  /**
+    * Compute the type of a value which would successfully match against the given pattern.
+    */
+  def patternType(pat: Pattern): TypeTree = pat match {
+    case LiteralPattern(binder, lit)           => binder.map(_.getType).getOrElse(lit.getType)
+    case WildcardPattern(binder)               => binder.map(_.getType).getOrElse(Untyped)
+    case TuplePattern(binder, subPats)         => binder.map(_.getType).getOrElse(TupleType(subPats.map(patternType)))
+    case CaseClassPattern(binder, ct, subPats) => binder.map(_.getType).getOrElse(ct)
+    case InstanceOfPattern(binder, ct)         => binder.map(_.getType).getOrElse(ct)
+    case PrimitivePattern(binder, tpe)         => binder.map(_.getType).getOrElse(tpe)
+  }
+
   /*
    * Returns a pattern and a guard, if needed
    */
