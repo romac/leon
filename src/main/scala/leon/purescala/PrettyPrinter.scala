@@ -13,7 +13,7 @@ import leon.purescala.Expressions._
 import leon.purescala.TypeOps.leastUpperBound
 import leon.purescala.Types._
 import leon.synthesis.Witnesses._
-import leon.xlang.any.Any1Ops
+import leon.purescala.any.Any1Ops.{classType => Any1Type}
 
 case class PrinterContext(
   current: Tree,
@@ -537,7 +537,7 @@ class PrettyPrinter(opts: PrinterOptions, val sb: StringBuffer = new StringBuffe
       case TupleType(tpes)       => p"($tpes)"
       case FunctionType(fts, tt) => p"($fts) => $tt"
 
-      case c: ClassType if c == Any1Ops.classType =>
+      case c: ClassType if c == Any1Type =>
         p"Any1"
 
       case c: ClassType =>

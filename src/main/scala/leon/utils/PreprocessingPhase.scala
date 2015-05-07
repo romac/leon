@@ -8,7 +8,7 @@ import purescala.ScalaPrinter
 
 import purescala.{MethodLifting, CompleteAbstractDefinitions, CheckADTFieldsTypes}
 import purescala.{MethodLifting, CompleteAbstractDefinitions}
-import xlang.any.DesugarAnyPhase
+import purescala.any.DesugarAnyPhase
 import synthesis.{ConvertWithOracle, ConvertHoles}
 import verification.InjectAsserts
 

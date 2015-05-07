@@ -1,10 +1,9 @@
 /* Copyright 2009-2015 EPFL, Lausanne */
 
 package leon
-package xlang
+package purescala
 package any
 
-import leon.purescala._
 import Common._
 import Definitions._
 import Expressions._
