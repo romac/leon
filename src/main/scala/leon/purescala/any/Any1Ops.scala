@@ -48,29 +48,14 @@ object Any1Ops {
   }
 
   def isWrappable(tpe: TypeTree): Boolean = tpe match {
-    case tpe: TypeParameter =>
-      false
-
-    case tpe: ClassType if tpe.tps.nonEmpty =>
-      false
-
-    case SetType(base) if typeContainsAny(base) =>
-      false
-
-    case MultisetType(base) if typeContainsAny(base) =>
-      false
-
-    case MapType(from, to) if typeContainsAny(from) || typeContainsAny(to) =>
-      false
-
-    case ArrayType(base) if typeContainsAny(base) =>
-      false
-
-    case FunctionType(from, to) if from.exists(typeContainsAny) || typeContainsAny(to) =>
-      false
-
-    case _ =>
-      true
+    case tpe: TypeParameter                                                            => false
+    case tpe: ClassType         if tpe.tps.nonEmpty                                    => false
+    case SetType(base)          if typeContainsAny(base)                               => false
+    case MultisetType(base)     if typeContainsAny(base)                               => false
+    case MapType(from, to)      if typeContainsAny(from) || typeContainsAny(to)        => false
+    case ArrayType(base)        if typeContainsAny(base)                               => false
+    case FunctionType(from, to) if from.exists(typeContainsAny) || typeContainsAny(to) => false
+    case _                                                                             => true
   }
 
   def wrapperTypeFor(tpe: TypeTree): CaseClassType = tpe match {
