@@ -15,17 +15,9 @@ import scala.collection.mutable.Map
 
 object Any1Ops {
 
-  private val classWrappers = Map[ClassDef, CaseClassDef]()
-  private val typeWrappers  = Map[TypeTree, CaseClassDef]()
+  private val wrappers = Map[TypeTree, CaseClassDef]()
 
-  def allWrappers: Seq[CaseClassDef] = classWrappers.values.toSeq ++ typeWrappers.values.toSeq
-
-  def registerWrapper(cd: ClassDef, wrapper: CaseClassDef): Unit =
-    classWrappers += cd -> wrapper
-
-  def registerWrapper(tpe: TypeTree, wrapper: CaseClassDef): Unit = {
-    typeWrappers += tpe -> wrapper
-  }
+  def allWrappers: Seq[CaseClassDef] = wrappers.values.toSeq
 
   def registerChild(child: ClassDef): ClassDef = {
     Any1ClassDef.registerChildren(child)
@@ -61,11 +53,12 @@ object Any1Ops {
   def wrapperTypeFor(tpe: TypeTree): CaseClassType = tpe match {
     case cTpe: ClassType =>
       val rootClass = rootClassDef(cTpe.classDef)
-      val wrapperDef = classWrappers.getOrElseUpdate(rootClass, wrapClass(rootClass))
+      val rootClassType = classDefToClassType(rootClass)
+      val wrapperDef = wrappers.getOrElseUpdate(rootClassType, wrapClass(rootClass))
       classDefToClassType(wrapperDef).asInstanceOf[CaseClassType]
 
     case _ =>
-      val wrapperDef = typeWrappers.getOrElseUpdate(tpe, wrapType(tpe))
+      val wrapperDef = wrappers.getOrElseUpdate(tpe, wrapPrimitive(tpe))
       classDefToClassType(wrapperDef).asInstanceOf[CaseClassType]
   }
 
@@ -91,13 +84,13 @@ object Any1Ops {
 
     wrapper.setFields(Seq(field))
 
-    Any1Ops.registerChild(wrapper)
-    Any1Ops.registerWrapper(cd, wrapper)
+    registerChild(wrapper)
+    wrappers += classDefToClassType(cd) -> wrapper
 
     wrapper
   }
 
-  def wrapType(tpe: TypeTree): CaseClassDef = {
+  def wrapPrimitive(tpe: TypeTree): CaseClassDef = {
     val name        = typeName(tpe)
     val wrapper     = CaseClassDef(FreshIdentifier("Any1$" + name), Seq(), Some(Any1ClassType), false)
     val wrapperType = classDefToClassType(wrapper, Seq())
@@ -107,8 +100,8 @@ object Any1Ops {
 
     wrapper.setFields(Seq(field))
 
-    Any1Ops.registerChild(wrapper)
-    Any1Ops.registerWrapper(tpe, wrapper)
+    registerChild(wrapper)
+    wrappers += tpe -> wrapper
 
     wrapper
   }
