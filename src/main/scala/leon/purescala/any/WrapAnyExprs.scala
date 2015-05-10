@@ -42,7 +42,7 @@ object WrapAnyExprs extends TransformationPhase {
       }
     }
 
-    def wrapExprIfNeeded(e: Expr, tpe: TypeTree = Any1Ops.classType): Expr =
+    def wrapExprIfNeeded(e: Expr, tpe: TypeTree = Any1ClassType): Expr =
       if (shouldWrap(e, tpe)) Any1Ops.wrap(e) else e
 
     def shouldWrap(e: Expr, tpe: TypeTree): Boolean =

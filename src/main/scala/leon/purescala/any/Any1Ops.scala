@@ -15,21 +15,10 @@ import scala.collection.mutable.Map
 
 object Any1Ops {
 
-  lazy val classDef      = AbstractClassDef(FreshIdentifier("Any1"), Seq(), None)
-  lazy val classType     = AbstractClassType(classDef, Seq())
-
-  lazy val moduleDef     = {
-    val classDefs = Seq(classDef, unexpectedDef) ++ classWrappers.values ++ typeWrappers.values
-    ModuleDef(FreshIdentifier("Any1$Module"), classDefs, false)
-  }
-
-  lazy val unexpectedDef = {
-    val classDef = CaseClassDef(FreshIdentifier("Any1Unexpected"), Seq(), Some(classType), true)
-    registerChild(classDef)
-  }
-
   private val classWrappers = Map[ClassDef, CaseClassDef]()
   private val typeWrappers  = Map[TypeTree, CaseClassDef]()
+
+  def allWrappers: Seq[CaseClassDef] = classWrappers.values.toSeq ++ typeWrappers.values.toSeq
 
   def registerWrapper(cd: ClassDef, wrapper: CaseClassDef): Unit =
     classWrappers += cd -> wrapper
@@ -39,15 +28,15 @@ object Any1Ops {
   }
 
   def registerChild(child: ClassDef): ClassDef = {
-    classDef.registerChildren(child)
+    Any1ClassDef.registerChildren(child)
     child
   }
 
   def isAny(tpe: TypeTree): Boolean =
-    tpe == AnyType || isSubtypeOf(tpe, classType)
+    tpe == AnyType || isSubtypeOf(tpe, Any1ClassType)
 
   def isAny1(tpe: TypeTree): Boolean =
-    tpe == classType
+    tpe == Any1ClassType
 
   def wrap(expr: Expr)(implicit ctx: LeonContext): Expr = {
     if (!isWrappable(expr.getType)) {
@@ -103,12 +92,12 @@ object Any1Ops {
     else tpe
 
   private def anyToAny1(tpe: TypeTree): Option[TypeTree] = tpe match {
-    case AnyType => Some(Any1Ops.classType)
+    case AnyType => Some(Any1ClassType)
     case _       => None
   }
 
   def wrapClass(cd: ClassDef): CaseClassDef = {
-    val wrapper     = CaseClassDef(FreshIdentifier("Any1$" + cd.id.name), Seq(), Some(Any1Ops.classType), false).setPos(cd)
+    val wrapper     = CaseClassDef(FreshIdentifier("Any1$" + cd.id.name), Seq(), Some(Any1ClassType), false).setPos(cd)
     val wrapperType = classDefToClassType(wrapper, Seq())
 
     val valueType = classDefToClassType(cd)
@@ -125,7 +114,7 @@ object Any1Ops {
 
   def wrapType(tpe: TypeTree): CaseClassDef = {
     val name        = typeName(tpe)
-    val wrapper     = CaseClassDef(FreshIdentifier("Any1$" + name), Seq(), Some(Any1Ops.classType), false)
+    val wrapper     = CaseClassDef(FreshIdentifier("Any1$" + name), Seq(), Some(Any1ClassType), false)
     val wrapperType = classDefToClassType(wrapper, Seq())
 
     val valueId   = FreshIdentifier("value", tpe)

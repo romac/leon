@@ -25,12 +25,12 @@ object DesugarAnyPhase extends TransformationPhase {
     val name = "Add Module Any"
     val description = "Add module Any to program's unit"
 
+    def walkUnit(unit: UnitDef): UnitDef = {
+      unit.copy(modules = Any1ModuleDef(Any1Ops.allWrappers) +: unit.modules)
+    }
+
     // FIXME: Should add a new unit for Any, rather than a module per unit.
     def apply(ctx: LeonContext, program: Program): Program = {
-      def walkUnit(unit: UnitDef): UnitDef = {
-        unit.copy(modules = Any1Ops.moduleDef +: unit.modules)
-      }
-
       program.copy(units = program.units map walkUnit)
     }
   }
