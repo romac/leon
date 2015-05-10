@@ -8,6 +8,7 @@ import Common._
 import Definitions._
 import Expressions._
 import Types._
+import ExprOps._
 import TypeOps._
 import DefOps._
 
@@ -104,6 +105,17 @@ object Any1Ops {
     wrappers += tpe -> wrapper
 
     wrapper
+  }
+
+  def unwrapExpr(expr: Expr): Expr = {
+    def unwrap(t: Expr): Option[Expr] = t match {
+      case CaseClass(ct, value :: _) if isSubtypeOf(ct, Any1ClassType) =>
+        Some(value)
+
+      case _ => None
+    }
+
+    postMap(unwrap)(expr)
   }
 
   private var typeId = 0

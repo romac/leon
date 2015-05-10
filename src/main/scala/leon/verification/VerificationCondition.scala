@@ -4,6 +4,7 @@ package leon.verification
 
 import leon.purescala.Expressions._
 import leon.purescala.Definitions._
+import leon.purescala.Beautifier._
 import leon.purescala.PrettyPrinter
 import leon.purescala.Common._
 import leon.utils.Positioned
@@ -58,7 +59,8 @@ case class VCResult(status: VCStatus, solvedWith: Option[Solver], timeMs: Option
         // large arrays faithfully in ScalaPrinter is hard, while PrettyPrinter
         // is free to simplify
         val strings = cex.toSeq.sortBy(_._1.name).map {
-          case (id, v) => (id.asString(context), PrettyPrinter(v))
+          case (id, v) =>
+            (id.asString(context), PrettyPrinter(beautify(v)))
         }
 
         if (strings.nonEmpty) {
