@@ -88,20 +88,6 @@ object WrapAnyExprs extends TransformationPhase {
         id.setType(Any1Ops.mapTypeAnyToAny1(id.getType))
         v
 
-      case es @ EmptySet(setType) if Any1Ops.typeContainsAny(setType) =>
-        val newExpr = EmptySet(Any1Ops.mapTypeAnyToAny1(setType)).copiedFrom(es)
-        wrapExprIfNeeded(newExpr, tpe)
-
-      case ea @ EmptyArray(arrayType) if Any1Ops.typeContainsAny(arrayType) =>
-        val newExpr = EmptyArray(Any1Ops.mapTypeAnyToAny1(arrayType)).copiedFrom(ea)
-        wrapExprIfNeeded(newExpr, tpe)
-
-      case em @ EmptyMap(kTpe, vTpe) if Any1Ops.typeContainsAny(kTpe) || Any1Ops.typeContainsAny(vTpe)  =>
-        val newKTpe = Any1Ops.mapTypeAnyToAny1(kTpe)
-        val newVTpe = Any1Ops.mapTypeAnyToAny1(vTpe)
-        val newExpr = EmptyMap(newKTpe, newVTpe).copiedFrom(em)
-        wrapExprIfNeeded(newExpr, tpe)
-
       case cc @ CaseClass(ccTpe, args) =>
         val newCcTpe = Any1Ops.mapTypeAnyToAny1(ccTpe).asInstanceOf[CaseClassType]
         val newCc = CaseClass(newCcTpe, wrapArguments(args, ccTpe.fields)).copiedFrom(cc)

@@ -15,7 +15,13 @@ import purescala.Definitions.{
   Import    => LeonImport,
   _
 }
-import purescala.Expressions.{Expr => LeonExpr, This => LeonThis, _}
+import purescala.Expressions.{
+  Expr          => LeonExpr,
+  This          => LeonThis,
+  ApplyDynamic  => LeonApplyDynamic,
+  SelectDynamic => LeonSelectDynamic,
+  _
+}
 import purescala.Types.{TypeTree => LeonType, _}
 import purescala.Common._
 import purescala.Extractors._
@@ -720,7 +726,7 @@ trait CodeExtraction extends ASTExtractors {
         val ctparamsMap = ctparams zip cd.tparams.map(_.tp)
 
         for (d <- tmpl.body) d match {
-          case ExFunctionDef(sym, tparams, params, _, body) =>
+          case ExFunctionDef(sym, tparams, params, _, body) if defsToDefs contains sym =>
             val fd = defsToDefs(sym)
 
             val tparamsMap = (tparams zip fd.tparams.map(_.tp)).toMap ++ ctparamsMap
@@ -1606,15 +1612,15 @@ trait CodeExtraction extends ASTExtractors {
           //println(s"isMethod($sym) == ${isMethod(sym)}")
           
           
-          (rrec, sym.name.decoded, rargs) match {
-            case (null, _, args) =>
+          (rrec, sym.name.decoded, rargs, args) match {
+            case (null, _, args, _) =>
               val fd = getFunDef(sym, c.pos)
 
               val newTps = tps.map(t => extractType(t))
 
               FunctionInvocation(fd.typed(newTps), args)
 
-            case (IsTyped(rec, ct: ClassType), _, args) if isMethod(sym) =>
+            case (IsTyped(rec, ct: ClassType), _, args, _) if isMethod(sym) =>
               val fd = getFunDef(sym, c.pos)
               val cd = methodToClass(fd)
 
@@ -1622,135 +1628,135 @@ trait CodeExtraction extends ASTExtractors {
 
               MethodInvocation(rec, cd, fd.typed(newTps), args)
 
-            case (IsTyped(rec, ft: FunctionType), _, args) =>
+            case (IsTyped(rec, ft: FunctionType), _, args, _) =>
               application(rec, args)
 
-            case (IsTyped(rec, cct: CaseClassType), name, Nil) if cct.fields.exists(_.id.name == name) =>
+            case (IsTyped(rec, cct: CaseClassType), name, Nil, _) if cct.fields.exists(_.id.name == name) =>
 
               val fieldID = cct.fields.find(_.id.name == name).get.id
 
               CaseClassSelector(cct, rec, fieldID)
 
             //BigInt methods
-            case (IsTyped(a1, IntegerType), "+", List(IsTyped(a2, IntegerType))) =>
+            case (IsTyped(a1, IntegerType), "+", List(IsTyped(a2, IntegerType)), _) =>
               Plus(a1, a2)
-            case (IsTyped(a1, IntegerType), "-", List(IsTyped(a2, IntegerType))) =>
+            case (IsTyped(a1, IntegerType), "-", List(IsTyped(a2, IntegerType)), _) =>
               Minus(a1, a2)
-            case (IsTyped(a1, IntegerType), "*", List(IsTyped(a2, IntegerType))) =>
+            case (IsTyped(a1, IntegerType), "*", List(IsTyped(a2, IntegerType)), _) =>
               Times(a1, a2)
-            case (IsTyped(a1, IntegerType), "%", List(IsTyped(a2, IntegerType))) =>
+            case (IsTyped(a1, IntegerType), "%", List(IsTyped(a2, IntegerType)), _) =>
               Remainder(a1, a2)
-            case (IsTyped(a1, IntegerType), "mod", List(IsTyped(a2, IntegerType))) =>
+            case (IsTyped(a1, IntegerType), "mod", List(IsTyped(a2, IntegerType)), _) =>
               Modulo(a1, a2)
-            case (IsTyped(a1, IntegerType), "/", List(IsTyped(a2, IntegerType))) =>
+            case (IsTyped(a1, IntegerType), "/", List(IsTyped(a2, IntegerType)), _) =>
               Division(a1, a2)
-            case (IsTyped(a1, IntegerType), ">", List(IsTyped(a2, IntegerType))) =>
+            case (IsTyped(a1, IntegerType), ">", List(IsTyped(a2, IntegerType)), _) =>
               GreaterThan(a1, a2)
-            case (IsTyped(a1, IntegerType), ">=", List(IsTyped(a2, IntegerType))) =>
+            case (IsTyped(a1, IntegerType), ">=", List(IsTyped(a2, IntegerType)), _) =>
               GreaterEquals(a1, a2)
-            case (IsTyped(a1, IntegerType), "<", List(IsTyped(a2, IntegerType))) =>
+            case (IsTyped(a1, IntegerType), "<", List(IsTyped(a2, IntegerType)), _) =>
               LessThan(a1, a2)
-            case (IsTyped(a1, IntegerType), "<=", List(IsTyped(a2, IntegerType))) =>
+            case (IsTyped(a1, IntegerType), "<=", List(IsTyped(a2, IntegerType)), _) =>
               LessEquals(a1, a2)
 
             // Int methods
-            case (IsTyped(a1, Int32Type), "+", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), "+", List(IsTyped(a2, Int32Type)), _) =>
               BVPlus(a1, a2)
-            case (IsTyped(a1, Int32Type), "-", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), "-", List(IsTyped(a2, Int32Type)), _) =>
               BVMinus(a1, a2)
-            case (IsTyped(a1, Int32Type), "*", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), "*", List(IsTyped(a2, Int32Type)), _) =>
               BVTimes(a1, a2)
-            case (IsTyped(a1, Int32Type), "%", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), "%", List(IsTyped(a2, Int32Type)), _) =>
               BVRemainder(a1, a2)
-            case (IsTyped(a1, Int32Type), "/", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), "/", List(IsTyped(a2, Int32Type)), _) =>
               BVDivision(a1, a2)
 
-            case (IsTyped(a1, Int32Type), "|", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), "|", List(IsTyped(a2, Int32Type)), _) =>
               BVOr(a1, a2)
-            case (IsTyped(a1, Int32Type), "&", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), "&", List(IsTyped(a2, Int32Type)), _) =>
               BVAnd(a1, a2)
-            case (IsTyped(a1, Int32Type), "^", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), "^", List(IsTyped(a2, Int32Type)), _) =>
               BVXOr(a1, a2)
-            case (IsTyped(a1, Int32Type), "<<", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), "<<", List(IsTyped(a2, Int32Type)), _) =>
               BVShiftLeft(a1, a2)
-            case (IsTyped(a1, Int32Type), ">>", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), ">>", List(IsTyped(a2, Int32Type)), _) =>
               BVAShiftRight(a1, a2)
-            case (IsTyped(a1, Int32Type), ">>>", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), ">>>", List(IsTyped(a2, Int32Type)), _) =>
               BVLShiftRight(a1, a2)
 
-            case (IsTyped(a1, Int32Type), ">", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), ">", List(IsTyped(a2, Int32Type)), _) =>
               GreaterThan(a1, a2)
-            case (IsTyped(a1, Int32Type), ">=", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), ">=", List(IsTyped(a2, Int32Type)), _) =>
               GreaterEquals(a1, a2)
-            case (IsTyped(a1, Int32Type), "<", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), "<", List(IsTyped(a2, Int32Type)), _) =>
               LessThan(a1, a2)
-            case (IsTyped(a1, Int32Type), "<=", List(IsTyped(a2, Int32Type))) =>
+            case (IsTyped(a1, Int32Type), "<=", List(IsTyped(a2, Int32Type)), _) =>
               LessEquals(a1, a2)
 
             // Boolean methods
-            case (IsTyped(a1, BooleanType), "&&", List(IsTyped(a2, BooleanType))) =>
+            case (IsTyped(a1, BooleanType), "&&", List(IsTyped(a2, BooleanType)), _) =>
               and(a1, a2)
 
-            case (IsTyped(a1, BooleanType), "||", List(IsTyped(a2, BooleanType))) =>
+            case (IsTyped(a1, BooleanType), "||", List(IsTyped(a2, BooleanType)), _) =>
               or(a1, a2)
 
             // Set methods
-            //case (IsTyped(a1, SetType(b1)), "min", Nil) =>
+            //case (IsTyped(a1, SetType(b1)), "min", Nil, _) =>
             //  SetMin(a1)
 
-            //case (IsTyped(a1, SetType(b1)), "max", Nil) =>
+            //case (IsTyped(a1, SetType(b1)), "max", Nil, _) =>
             //  SetMax(a1)
 
-            case (IsTyped(a1, SetType(b1)), "++", List(IsTyped(a2, SetType(b2))))  if b1 == b2 =>
+            case (IsTyped(a1, SetType(b1)), "++", List(IsTyped(a2, SetType(b2))), _)  if b1 == b2 =>
               SetUnion(a1, a2)
 
-            case (IsTyped(a1, SetType(b1)), "&", List(IsTyped(a2, SetType(b2)))) if b1 == b2 =>
+            case (IsTyped(a1, SetType(b1)), "&", List(IsTyped(a2, SetType(b2))), _) if b1 == b2 =>
               SetIntersection(a1, a2)
 
-            case (IsTyped(a1, SetType(b1)), "subsetOf", List(IsTyped(a2, SetType(b2)))) if b1 == b2 =>
+            case (IsTyped(a1, SetType(b1)), "subsetOf", List(IsTyped(a2, SetType(b2))), _) if b1 == b2 =>
               SubsetOf(a1, a2)
 
-            case (IsTyped(a1, SetType(b1)), "--", List(IsTyped(a2, SetType(b2)))) if b1 == b2 =>
+            case (IsTyped(a1, SetType(b1)), "--", List(IsTyped(a2, SetType(b2))), _) if b1 == b2 =>
               SetDifference(a1, a2)
 
-            case (IsTyped(a1, SetType(b1)), "contains", List(a2)) =>
+            case (IsTyped(a1, SetType(b1)), "contains", List(a2), _) =>
               ElementOfSet(a2, a1)
 
-            case (IsTyped(a1, SetType(b1)), "isEmpty", List()) =>
+            case (IsTyped(a1, SetType(b1)), "isEmpty", List(), _) =>
               Equals(a1, finiteSet(Set(), b1))
 
             // Multiset methods
-            case (IsTyped(a1, MultisetType(b1)), "++", List(IsTyped(a2, MultisetType(b2))))  if b1 == b2 =>
+            case (IsTyped(a1, MultisetType(b1)), "++", List(IsTyped(a2, MultisetType(b2))), _)  if b1 == b2 =>
               MultisetUnion(a1, a2)
 
-            case (IsTyped(a1, MultisetType(b1)), "&", List(IsTyped(a2, MultisetType(b2)))) if b1 == b2 =>
+            case (IsTyped(a1, MultisetType(b1)), "&", List(IsTyped(a2, MultisetType(b2))), _) if b1 == b2 =>
               MultisetIntersection(a1, a2)
 
-            case (IsTyped(a1, MultisetType(b1)), "--", List(IsTyped(a2, MultisetType(b2)))) if b1 == b2 =>
+            case (IsTyped(a1, MultisetType(b1)), "--", List(IsTyped(a2, MultisetType(b2))), _) if b1 == b2 =>
               MultisetDifference(a1, a2)
 
-            case (IsTyped(a1, MultisetType(b1)), "+++", List(IsTyped(a2, MultisetType(b2)))) if b1 == b2 =>
+            case (IsTyped(a1, MultisetType(b1)), "+++", List(IsTyped(a2, MultisetType(b2))), _) if b1 == b2 =>
               MultisetPlus(a1, a2)
 
-            case (IsTyped(_, MultisetType(b1)), "toSet", Nil) =>
+            case (IsTyped(_, MultisetType(b1)), "toSet", Nil, _) =>
               MultisetToSet(rrec)
 
             // Array methods
-            case (IsTyped(a1, ArrayType(vt)), "apply", List(a2)) =>
+            case (IsTyped(a1, ArrayType(vt)), "apply", List(a2), _) =>
               ArraySelect(a1, a2)
 
-            case (IsTyped(a1, at: ArrayType), "length", Nil) =>
+            case (IsTyped(a1, at: ArrayType), "length", Nil, _) =>
               ArrayLength(a1)
 
-            case (IsTyped(a1, at: ArrayType), "updated", List(k, v)) =>
+            case (IsTyped(a1, at: ArrayType), "updated", List(k, v), _) =>
               ArrayUpdated(a1, k, v)
 
 
             // Map methods
-            case (IsTyped(a1, MapType(_, vt)), "apply", List(a2)) =>
+            case (IsTyped(a1, MapType(_, vt)), "apply", List(a2), _) =>
               MapGet(a1, a2)
 
-            case (IsTyped(a1, MapType(_, vt)), "get", List(a2)) =>
+            case (IsTyped(a1, MapType(_, vt)), "get", List(a2), _) =>
               val someClass = CaseClassType(libraryCaseClass(sym.pos, "leon.lang.Some"), Seq(vt))
               val noneClass = CaseClassType(libraryCaseClass(sym.pos, "leon.lang.None"), Seq(vt))
 
@@ -1758,24 +1764,24 @@ trait CodeExtraction extends ASTExtractors {
                 CaseClass(someClass, Seq(MapGet(a1, a2).setPos(current.pos))).setPos(current.pos),
                 CaseClass(noneClass, Seq()).setPos(current.pos))
 
-            case (IsTyped(a1, MapType(_, vt)), "getOrElse", List(a2, a3)) =>
+            case (IsTyped(a1, MapType(_, vt)), "getOrElse", List(a2, a3), _) =>
               IfExpr(MapIsDefinedAt(a1, a2).setPos(current.pos),
                 MapGet(a1, a2).setPos(current.pos),
                 a3)
 
-            case (IsTyped(a1, mt: MapType), "isDefinedAt", List(a2)) =>
+            case (IsTyped(a1, mt: MapType), "isDefinedAt", List(a2), _) =>
               MapIsDefinedAt(a1, a2)
 
-            case (IsTyped(a1, mt: MapType), "contains", List(a2)) =>
+            case (IsTyped(a1, mt: MapType), "contains", List(a2), _) =>
               MapIsDefinedAt(a1, a2)
 
-            case (IsTyped(a1, mt: MapType), "updated", List(k, v)) =>
+            case (IsTyped(a1, mt: MapType), "updated", List(k, v), _) =>
               MapUnion(a1, FiniteMap(Seq((k, v)), mt.from, mt.to))
 
-            case (IsTyped(a1, mt: MapType), "+", List(k, v)) =>
+            case (IsTyped(a1, mt: MapType), "+", List(k, v), _) =>
               MapUnion(a1, FiniteMap(Seq((k, v)), mt.from, mt.to))
 
-            case (IsTyped(a1, mt: MapType), "+", List(IsTyped(kv, TupleType(List(_, _))))) =>
+            case (IsTyped(a1, mt: MapType), "+", List(IsTyped(kv, TupleType(List(_, _)))), _) =>
               kv match {
                 case Tuple(List(k, v)) =>
                   MapUnion(a1, FiniteMap(Seq((k, v)), mt.from, mt.to))
@@ -1783,23 +1789,29 @@ trait CodeExtraction extends ASTExtractors {
                   MapUnion(a1, FiniteMap(Seq((TupleSelect(kv, 1), TupleSelect(kv, 2))), mt.from, mt.to))
               }
 
-            case (IsTyped(a1, mt1: MapType), "++", List(IsTyped(a2, mt2: MapType)))  if mt1 == mt2 =>
+            case (IsTyped(a1, mt1: MapType), "++", List(IsTyped(a2, mt2: MapType)), _)  if mt1 == mt2 =>
               MapUnion(a1, a2)
 
             // Char operations
-            case (IsTyped(a1, CharType), ">", List(IsTyped(a2, CharType))) =>
+            case (IsTyped(a1, CharType), ">", List(IsTyped(a2, CharType)), _) =>
               GreaterThan(a1, a2)
 
-            case (IsTyped(a1, CharType), ">=", List(IsTyped(a2, CharType))) =>
+            case (IsTyped(a1, CharType), ">=", List(IsTyped(a2, CharType)), _) =>
               GreaterEquals(a1, a2)
 
-            case (IsTyped(a1, CharType), "<", List(IsTyped(a2, CharType))) =>
+            case (IsTyped(a1, CharType), "<", List(IsTyped(a2, CharType)), _) =>
               LessThan(a1, a2)
 
-            case (IsTyped(a1, CharType), "<=", List(IsTyped(a2, CharType))) =>
+            case (IsTyped(a1, CharType), "<=", List(IsTyped(a2, CharType)), _) =>
               LessEquals(a1, a2)
 
-            case (_, name, _) =>
+            case (a1, "applyDynamic", _, ExStringLiteral(methodName) :: args) =>
+              LeonApplyDynamic(a1, methodName, args.map(extractTree))
+
+            case (a1, "selectDynamic", _, ExStringLiteral(field) :: Nil) =>
+              LeonSelectDynamic(a1, field)
+
+            case (_, name, _, _) =>
               outOfSubsetError(tr, "Unknown call to "+name)
           }
 
