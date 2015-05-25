@@ -86,14 +86,6 @@ object Expressions {
     def getType = tfd.returnType
   }
 
-  case class ApplyDynamic(rec: Expr, methodName: String, args: Seq[Expr]) extends Expr {
-    def getType = rec.getType // FIXME: Should be explicitely Any1
-  }
-
-  case class SelectDynamic(rec: Expr, fieldName: String) extends Expr {
-    def getType = rec.getType // FIXME: Should be explicitely Any1
-  }
-
   /**
    * OO Trees
    *

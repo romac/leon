@@ -294,8 +294,6 @@ class PrettyPrinter(opts: PrinterOptions, val sb: StringBuffer = new StringBuffe
         }
       case AnyInstanceOf(cct, e)               => p"$e.isInstanceOf[$cct]"
       case AsInstanceOf(cct, e)                => p"$e.asInstanceOf[$cct]"
-      case ApplyDynamic(rec, name, args)       => p"$rec.$name($args)"
-      case SelectDynamic(rec, name)            => p"$rec.$name"
       case CaseClassSelector(_, e, id)         => p"$e.$id"
       case MethodInvocation(rec, _, tfd, args) =>
         p"$rec.${tfd.id}"
