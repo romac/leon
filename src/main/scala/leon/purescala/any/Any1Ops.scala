@@ -14,11 +14,26 @@ import DefOps._
 
 import scala.collection.mutable.Map
 
-object Any1Ops {
+class Any1Ops(ctx: LeonContext, program: Program) {
 
   private val wrappers = Map[TypeTree, CaseClassDef]()
 
   def allWrappers: Seq[CaseClassDef] = wrappers.values.toSeq
+
+  lazy val Any1ClassDef: AbstractClassDef =
+    program.library.Any1.get
+
+  lazy val Any1ClassType: AbstractClassType =
+    classDefToClassType(Any1ClassDef).asInstanceOf[AbstractClassType]
+
+  lazy val UnexpectedDef: CaseClassDef =
+    CaseClassDef(FreshIdentifier("Any1Unexpected"), Seq(), Some(Any1ClassType), true)
+
+  lazy val Any1ModuleDef: ModuleDef = {
+    Any1ClassDef.registerChildren(UnexpectedDef)
+    val classDefs = UnexpectedDef +: allWrappers
+    ModuleDef(FreshIdentifier("any1Wrapper"), classDefs, false)
+  }
 
   def registerChild(child: ClassDef): ClassDef = {
     Any1ClassDef.registerChildren(child)
@@ -31,7 +46,7 @@ object Any1Ops {
   def isAny1(tpe: TypeTree): Boolean =
     tpe == Any1ClassType
 
-  def wrap(expr: Expr)(implicit ctx: LeonContext): Expr = {
+  def wrap(expr: Expr): Expr = {
     if (!isWrappable(expr.getType)) {
       ctx.reporter.error(s"Cannot treat value of type ${expr.getType} as Any")
       expr
@@ -64,7 +79,7 @@ object Any1Ops {
   }
 
   def typeContainsAny(tpe: TypeTree): Boolean =
-    typeExists(Any1Ops.isAny)(tpe)
+    typeExists(isAny)(tpe)
 
   def mapTypeAnyToAny1(tpe: TypeTree, force: Boolean = false): TypeTree =
     if (force || typeContainsAny(tpe)) mapType(anyToAny1)(tpe)

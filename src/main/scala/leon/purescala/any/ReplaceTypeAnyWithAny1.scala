@@ -13,7 +13,7 @@ import ExprOps._
 import DefOps._
 import TypeOps._
 
-object ReplaceTypeAnyWithAny1 extends TransformationPhase {
+class ReplaceTypeAnyWithAny1(any1Ops: Any1Ops) extends TransformationPhase {
 
   val name = "Replace Type Any With Any1"
   val description = "Replace Any with Any1 in FunDef's return type and parameters"
@@ -21,13 +21,13 @@ object ReplaceTypeAnyWithAny1 extends TransformationPhase {
   def apply(ctx: LeonContext, program: Program): Program = {
 
     def transformValDef(vd: ValDef): Unit = {
-      val newTpe = Any1Ops.mapTypeAnyToAny1(vd.getType)
+      val newTpe = any1Ops.mapTypeAnyToAny1(vd.getType)
       if (newTpe != vd.getType)
         vd.id.setType(newTpe)
     }
 
     def replaceTypes(fd: FunDef): Option[FunDef] = {
-      val retType = Any1Ops.mapTypeAnyToAny1(fd.returnType)
+      val retType = any1Ops.mapTypeAnyToAny1(fd.returnType)
 
       fd.params foreach transformValDef
 

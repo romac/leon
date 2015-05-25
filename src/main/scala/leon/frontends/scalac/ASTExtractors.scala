@@ -40,6 +40,7 @@ trait ASTExtractors {
   protected lazy val byNameSym          = classFromName("scala.<byname>")
   protected lazy val bigIntSym          = classFromName("scala.math.BigInt")
   protected lazy val anySym             = classFromName("scala.Any")
+  protected lazy val any1Sym            = classFromName("leon.lang.Any1")
 
   def isTuple2(sym : Symbol) : Boolean = sym == tuple2Sym
   def isTuple3(sym : Symbol) : Boolean = sym == tuple3Sym
@@ -47,6 +48,8 @@ trait ASTExtractors {
   def isTuple5(sym : Symbol) : Boolean = sym == tuple5Sym
 
   def isAnySym(sym : Symbol) : Boolean = getResolvedTypeSym(sym) == anySym
+
+  def isAny1Sym(sym : Symbol) : Boolean = getResolvedTypeSym(sym) == any1Sym
 
   def isBigIntSym(sym : Symbol) : Boolean = getResolvedTypeSym(sym) == bigIntSym
 

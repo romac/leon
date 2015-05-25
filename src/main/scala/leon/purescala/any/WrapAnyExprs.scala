@@ -17,24 +17,23 @@ import TypeOps._
 // - Gracefully handle possible errors (ie. when getting wrapper type or casting)
 // - Extract re-usable part into TransformWithType tranformation
 
-object WrapAnyExprs extends TransformationPhase {
+class WrapAnyExprs(any1Ops: Any1Ops) extends TransformationPhase {
 
   val name = "Wrap Any Exprs"
   val description = "Wrap expressions into the appropriate Any1 subtype wherever needed"
 
   def apply(ctx: LeonContext, program: Program): Program = {
-    implicit val context = ctx
 
     def wrapArguments(args: Seq[Expr], params: Seq[ValDef]): Seq[Expr] = {
       require(args.length == params.length)
 
       args.zip(params) map {
-        case (arg, vd) if Any1Ops.typeContainsAny(vd.getType) =>
+        case (arg, vd) if any1Ops.typeContainsAny(vd.getType) =>
           wrapExpr(arg, vd.getType)
 
         case (l @ Lambda(args, body), vd) =>
           val funType = vd.getType.asInstanceOf[FunctionType]
-          if (Any1Ops.typeContainsAny(funType.to))
+          if (any1Ops.typeContainsAny(funType.to))
             Lambda(args, wrapExpr(body, funType.to)).copiedFrom(l)
           else l
 
@@ -42,11 +41,11 @@ object WrapAnyExprs extends TransformationPhase {
       }
     }
 
-    def wrapExprIfNeeded(e: Expr, tpe: TypeTree = Any1ClassType): Expr =
-      if (shouldWrap(e, tpe)) Any1Ops.wrap(e) else e
+    def wrapExprIfNeeded(e: Expr, tpe: TypeTree = any1Ops.Any1ClassType): Expr =
+      if (shouldWrap(e, tpe)) any1Ops.wrap(e) else e
 
     def shouldWrap(e: Expr, tpe: TypeTree): Boolean =
-      Any1Ops.isAny(tpe) && !Any1Ops.isAny1(e.getType)
+      any1Ops.isAny(tpe) && !any1Ops.isAny1(e.getType)
 
     def wrapExpr(e: Expr, tpe: TypeTree): Expr = e match {
       case i @ IfExpr(cond, thenn, elze) if shouldWrap(i, tpe) =>
@@ -66,14 +65,14 @@ object WrapAnyExprs extends TransformationPhase {
         MatchExpr(wscrut, wcases).copiedFrom(m)
 
       case a @ AnyInstanceOf(cd: ClassType, v) =>
-        CaseClassInstanceOf(Any1Ops.wrapperTypeFor(cd), (wrapExpr(v, v.getType))).copiedFrom(a)
+        CaseClassInstanceOf(any1Ops.wrapperTypeFor(cd), (wrapExpr(v, v.getType))).copiedFrom(a)
 
       case a @ AsInstanceOf(cd: ClassType, v) =>
-        AsInstanceOf(Any1Ops.wrapperTypeFor(cd), (wrapExpr(v, v.getType))).copiedFrom(a)
+        AsInstanceOf(any1Ops.wrapperTypeFor(cd), (wrapExpr(v, v.getType))).copiedFrom(a)
 
       case fi @ FunctionInvocation(tfd, args) =>
         val newArgs = wrapArguments(args, tfd.fd.params)
-        val funDef = TypedFunDef(tfd.fd, tfd.tps.map(Any1Ops.mapTypeAnyToAny1(_)))
+        val funDef = TypedFunDef(tfd.fd, tfd.tps.map(any1Ops.mapTypeAnyToAny1(_)))
         FunctionInvocation(funDef, newArgs).copiedFrom(fi)
 
       // Shouldn't be needed, we come after MethodLifting
@@ -84,12 +83,12 @@ object WrapAnyExprs extends TransformationPhase {
       case ld @ LetDef(tfd, body) =>
         LetDef(tfd, wrapExpr(body, tfd.returnType)).copiedFrom(ld)
 
-      case v @ Variable(id) if Any1Ops.typeContainsAny(id.getType)=>
-        id.setType(Any1Ops.mapTypeAnyToAny1(id.getType))
+      case v @ Variable(id) if any1Ops.typeContainsAny(id.getType)=>
+        id.setType(any1Ops.mapTypeAnyToAny1(id.getType))
         v
 
       case cc @ CaseClass(ccTpe, args) =>
-        val newCcTpe = Any1Ops.mapTypeAnyToAny1(ccTpe).asInstanceOf[CaseClassType]
+        val newCcTpe = any1Ops.mapTypeAnyToAny1(ccTpe).asInstanceOf[CaseClassType]
         val newCc = CaseClass(newCcTpe, wrapArguments(args, ccTpe.fields)).copiedFrom(cc)
         wrapExprIfNeeded(newCc, tpe)
 
@@ -112,38 +111,38 @@ object WrapAnyExprs extends TransformationPhase {
     }
 
     def wrapPattern(pat: Pattern, scrutTpe: TypeTree): Pattern = pat match {
-      case InstanceOfPattern(binder, ct) if Any1Ops.isAny(scrutTpe) =>
-        CaseClassPattern(None, Any1Ops.wrapperTypeFor(ct), Seq(pat)).copiedFrom(pat)
+      case InstanceOfPattern(binder, ct) if any1Ops.isAny(scrutTpe) =>
+        CaseClassPattern(None, any1Ops.wrapperTypeFor(ct), Seq(pat)).copiedFrom(pat)
 
-      case CaseClassPattern(_, ct, subPats) if Any1Ops.isAny(scrutTpe) =>
-        CaseClassPattern(None, Any1Ops.wrapperTypeFor(ct), Seq(wrapPattern(pat, ct))).copiedFrom(pat)
+      case CaseClassPattern(_, ct, subPats) if any1Ops.isAny(scrutTpe) =>
+        CaseClassPattern(None, any1Ops.wrapperTypeFor(ct), Seq(wrapPattern(pat, ct))).copiedFrom(pat)
 
       case CaseClassPattern(binder, ct, subPats) =>
-        val newClassType = Any1Ops.mapTypeAnyToAny1(ct).asInstanceOf[CaseClassType]
-        binder map (id => id.setType(Any1Ops.mapTypeAnyToAny1(id.getType)))
+        val newClassType = any1Ops.mapTypeAnyToAny1(ct).asInstanceOf[CaseClassType]
+        binder map (id => id.setType(any1Ops.mapTypeAnyToAny1(id.getType)))
         CaseClassPattern(binder, newClassType, wrapSubPatterns(subPats, ct)).copiedFrom(pat)
 
       case PrimitivePattern(binder, tpe) => // scrutTpe should always be Any in that case
-        val wrapperType = Any1Ops.wrapperTypeFor(tpe)
+        val wrapperType = any1Ops.wrapperTypeFor(tpe)
         CaseClassPattern(None, wrapperType, Seq(WildcardPattern(binder).copiedFrom(pat))).copiedFrom(pat)
 
-      case TuplePattern(binder, subPats) if Any1Ops.isAny(scrutTpe) =>
+      case TuplePattern(binder, subPats) if any1Ops.isAny(scrutTpe) =>
         val patType = patternType(pat)
-        val wrapperType = Any1Ops.wrapperTypeFor(patType)
+        val wrapperType = any1Ops.wrapperTypeFor(patType)
         val newPat = wrapPattern(pat, patType)
         CaseClassPattern(None, wrapperType, Seq(newPat)).copiedFrom(pat)
 
       case TuplePattern(binder, subPats) =>
-        val newBinder = binder map (id => id.setType(Any1Ops.mapTypeAnyToAny1(id.getType)))
+        val newBinder = binder map (id => id.setType(any1Ops.mapTypeAnyToAny1(id.getType)))
         val newSubPatterns = subPats map (p => wrapPattern(p, Untyped))
         TuplePattern(newBinder, newSubPatterns).copiedFrom(pat)
 
       case WildcardPattern(binder) =>
-        val newBinder = binder map (id => id.setType(Any1Ops.mapTypeAnyToAny1(id.getType)))
+        val newBinder = binder map (id => id.setType(any1Ops.mapTypeAnyToAny1(id.getType)))
         WildcardPattern(newBinder).copiedFrom(pat)
 
-      case LiteralPattern(binder, lit) if Any1Ops.isAny(scrutTpe) =>
-        val wrapperType = Any1Ops.wrapperTypeFor(lit.getType)
+      case LiteralPattern(binder, lit) if any1Ops.isAny(scrutTpe) =>
+        val wrapperType = any1Ops.wrapperTypeFor(lit.getType)
         CaseClassPattern(None, wrapperType, Seq(pat)).copiedFrom(pat)
 
     }

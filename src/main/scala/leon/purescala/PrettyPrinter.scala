@@ -13,7 +13,6 @@ import leon.purescala.Expressions._
 import leon.purescala.TypeOps.leastUpperBound
 import leon.purescala.Types._
 import leon.synthesis.Witnesses._
-import leon.purescala.any.Any1ClassType
 
 case class PrinterContext(
   current: Tree,
@@ -536,9 +535,6 @@ class PrettyPrinter(opts: PrinterOptions, val sb: StringBuffer = new StringBuffe
       case MultisetType(bt)      => p"Multiset[$bt]"
       case TupleType(tpes)       => p"($tpes)"
       case FunctionType(fts, tt) => p"($fts) => $tt"
-
-      case c: ClassType if c == Any1ClassType =>
-        p"Any1"
 
       case c: ClassType =>
         printWithPath(c.classDef)

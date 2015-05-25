@@ -4,7 +4,7 @@ package leon.verification
 
 import leon.purescala.Expressions._
 import leon.purescala.Definitions._
-import leon.purescala.Beautifier._
+import leon.purescala.Beautifier
 import leon.purescala.PrettyPrinter
 import leon.purescala.Common._
 import leon.utils.Positioned
@@ -46,6 +46,8 @@ case class VCResult(status: VCStatus, solvedWith: Option[Solver], timeMs: Option
   def report(vctx: VerificationContext) {
     import vctx.reporter
     import vctx.context
+
+    val beautify = new Beautifier(vctx.context, vctx.program)
 
     status match {
       case VCStatus.Valid =>

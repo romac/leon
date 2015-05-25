@@ -3,16 +3,18 @@
 package leon
 package purescala
 
+import Definitions._
 import Expressions._
+import any.Any1Ops
 
-import any.Any1Ops.unwrapExpr
+class Beautifier(ctx: LeonContext, program: Program) {
 
-object Beautifier {
+  private val any1Ops = new Any1Ops(ctx, program)
 
-  private val beautifiers: Seq[Expr => Expr] = Seq(
-    unwrapExpr
-  )
+  def apply(expr: Expr) = beautify(expr)
 
-  val beautify: Expr => Expr = beautifiers.reduce(_ andThen _)
+  def beautify(expr: Expr): Expr = {
+    any1Ops.unwrapExpr(expr)
+  }
 
 }

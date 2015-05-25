@@ -18,6 +18,8 @@ case class Library(pgm: Program) {
 
   lazy val String = lookup("leon.lang.string.String") collect { case ccd : CaseClassDef => ccd }
 
+  lazy val Any1 = lookup("leon.lang.Any1") collect { case acd : AbstractClassDef => acd }
+
   lazy val setToList = lookup("leon.collection.setToList") collect { case fd : FunDef => fd }
   
   def lookup(name: String): Option[Definition] = {
