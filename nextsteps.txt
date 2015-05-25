@@ -10,6 +10,13 @@
 [x] Write ListAny library.
 [x] Add support for higher order functions.
 
-[ ] Disallow wrapping Sets of Any (same for Arrays and Maps)
-[ ] Modify verification report to strip Any1 wrappers from the output
-[ ] Have Any1 extend Dynamic, define define selectDynamic() etc. + other operations (see https://github.com/scala-js/scala-js/blob/master/library/src/main/scala/scala/scalajs/js/Dynamic.scala)
+[x] Disallow wrapping Sets of Any (same for Arrays and Maps)
+[x] Modify verification report to strip Any1 wrappers from the output
+
+[/] Extract selectDynamic and applyDynamic
+[/] Have Any1 extend Dynamic
+
+[x] Create an Any1Ops instance at the start of DesugarAnyPhase and pass it to the subphases.
+
+[~] Define operations on implicit class (see https://github.com/scala-js/scala-js/blob/master/library/src/main/scala/scala/scalajs/js/Dynamic.scala)
+[ ] Desugar calls to methods on that implicit class to pattern matches + actual impl.
