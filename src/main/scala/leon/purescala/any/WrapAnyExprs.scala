@@ -101,10 +101,10 @@ class WrapAnyExprs(any1Ops: Any1Ops) extends TransformationPhase {
         wrapExprIfNeeded(newCc, tpe)
 
       case t: Terminal =>
-        wrapExprIfNeeded(t, tpe)
+        wrapExprIfNeeded(t, tpe).copiedFrom(t)
 
       case o @ UnaryOperator(e, builder) =>
-        val res = builder(wrapExpr(e, e.getType))
+        val res = builder(wrapExpr(e, e.getType)).copiedFrom(o)
         wrapExprIfNeeded(res, tpe)
 
       case o @ BinaryOperator(e1, e2, builder) =>
