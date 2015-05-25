@@ -524,6 +524,12 @@ class PrettyPrinter(opts: PrinterOptions, val sb: StringBuffer = new StringBuffe
         ob foreach { b => p"$b @ " }
         p"$lit"
 
+      case PrimitivePattern(ob, tpe) =>
+        ob match {
+          case Some(binder) => p"$binder: $tpe"
+          case None => p"_: $tpe"
+        }
+
       // Types
       case Untyped               => p"<untyped>"
       case AnyType               => p"Any"
