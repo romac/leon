@@ -87,6 +87,15 @@ object Expressions {
   }
 
   /**
+   * A "dynamic" call to a method on a value of type Any. The methods definitions
+   * are provided by the leon.lang.any.Any1Ops implicit class, and are
+   * desugared into pattern matches over the operation name and its operands types.
+   */
+  case class DynamicCall(op: String, lhs: Expr, rhs: Expr) extends Expr {
+    def getType = AnyType
+  }
+
+  /**
    * OO Trees
    *
    * Both MethodInvocation and This get removed by phase MethodLifting. Methods become functions,

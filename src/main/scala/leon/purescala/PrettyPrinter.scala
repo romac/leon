@@ -315,6 +315,9 @@ class PrettyPrinter(opts: PrinterOptions, val sb: StringBuffer = new StringBuffe
       case BinaryMethodCall(a, op, b) =>
         optP { p"$a $op $b" }
 
+      case DynamicCall(op, a, b) =>
+        optP { p"$a.$op($b)" }
+
       case FcallMethodInvocation(rec, fd, id, tps, args) =>
 
         p"$rec.$id"

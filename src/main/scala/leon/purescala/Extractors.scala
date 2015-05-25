@@ -90,6 +90,7 @@ object Extractors {
       case Require(pre, body) => Some((pre, body, Require))
       case Ensuring(body, post) => Some((body, post, (b: Expr, p: Expr) => Ensuring(b, p)))
       case Assert(const, oerr, body) => Some((const, body, (c: Expr, b: Expr) => Assert(c, oerr, b)))
+      case DynamicCall(op, lhs, rhs) => Some((lhs, rhs, (l: Expr, r: Expr) => DynamicCall(op, l, r)))
       case (ex: BinaryExtractable) => ex.extract
       case _ => None
     }
