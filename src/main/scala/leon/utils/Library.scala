@@ -20,11 +20,11 @@ case class Library(pgm: Program) {
 
   lazy val setToList = lookup("leon.collection.setToList") collect { case fd : FunDef => fd }
 
-  lazy val Any1 = lookup("leon.lang.Any1") collect { case acd : AbstractClassDef => acd }
+  lazy val Any1 = lookup("leon.lang.any.Any1") collect { case acd : AbstractClassDef => acd }
 
   object anyOps {
-    lazy val Plus  = lookup("leon.lang.any.Plus") collect { case ccd : CaseClassDef => ccd }
-    lazy val Minus = lookup("leon.lang.any.Minus") collect { case ccd : CaseClassDef => ccd }
+    lazy val plus  = lookup("leon.lang.any.plusOp") collect { case fd : FunDef => fd }
+    lazy val minus = lookup("leon.lang.any.minusOp") collect { case fd : FunDef => fd }
   }
 
   def lookup(name: String): Option[Definition] = {

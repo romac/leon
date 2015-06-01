@@ -7,9 +7,6 @@ import scala.language.implicitConversions
 
 package object lang {
 
-  @library
-  abstract class Any1
-
   @ignore
   type ?!? = Any
 

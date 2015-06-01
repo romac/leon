@@ -27,8 +27,8 @@ object PreprocessingPhase extends TransformationPhase {
 
     val phases =
       ScopingPhase                  andThen
-      desugarAny                    andThen
       MethodLifting                 andThen
+      desugarAny                    andThen
       TypingPhase                   andThen
       ConvertWithOracle             andThen
       ConvertHoles                  andThen

@@ -72,19 +72,26 @@ class WrapAnyExprs(any1Ops: Any1Ops) extends TransformationPhase {
       case a @ AsInstanceOf(cd: ClassType, v) =>
         AsInstanceOf(any1Ops.wrapperTypeFor(cd), (wrapExpr(v, v.getType))).copiedFrom(a)
 
+      case e @ Error(tpe, desc) =>
+        Error(any1Ops.mapTypeAnyToAny1(tpe), desc).copiedFrom(e)
+
       case fi @ FunctionInvocation(tfd, args) =>
         val newArgs = wrapArguments(args, tfd.fd.params)
         val funDef = TypedFunDef(tfd.fd, tfd.tps.map(any1Ops.mapTypeAnyToAny1(_)))
         FunctionInvocation(funDef, newArgs).copiedFrom(fi)
 
-      case mi @ MethodInvocation(rec, cd, tfd, args) =>
-        val newArgs = wrapArguments(args, tfd.fd.params)
-        val funDef = TypedFunDef(tfd.fd, tfd.tps.map(any1Ops.mapTypeAnyToAny1(_)))
-        MethodInvocation(rec, cd, funDef, newArgs).copiedFrom(mi)
+      // Shouldn't be needed as we come after MethodLifting
+      // case mi @ MethodInvocation(rec, cd, tfd, args) =>
+      //   val newArgs = wrapArguments(args, tfd.fd.params)
+      //   val funDef = TypedFunDef(tfd.fd, tfd.tps.map(any1Ops.mapTypeAnyToAny1(_)))
+      //   MethodInvocation(rec, cd, funDef, newArgs).copiedFrom(mi)
 
-      case dc @ DynamicCall(op, lhs, rhs) =>
-        dynamicCalls.desugar(dc) match {
-          case Some(call) => call
+      case dc @ DynamicCall(op, l, r) =>
+        val lhs = wrapExpr(l, l.getType)
+        val rhs = wrapExpr(r, r.getType)
+
+        dynamicCalls.desugar(op, lhs, rhs) match {
+          case Some(call) => call.copiedFrom(dc)
           case None       => ctx.reporter.fatalError(s"Unknown dynamic call $dc")
         }
 
@@ -153,6 +160,7 @@ class WrapAnyExprs(any1Ops: Any1Ops) extends TransformationPhase {
         val wrapperType = any1Ops.wrapperTypeFor(lit.getType)
         CaseClassPattern(None, wrapperType, Seq(pat)).copiedFrom(pat)
 
+      case _ => pat
     }
 
     def wrapSubPatterns(subPatterns: Seq[Pattern], ct: ClassType): Seq[Pattern] = {
