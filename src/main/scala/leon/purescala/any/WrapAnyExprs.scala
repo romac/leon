@@ -78,7 +78,8 @@ class WrapAnyExprs(any1Ops: Any1Ops) extends TransformationPhase {
       case fi @ FunctionInvocation(tfd, args) =>
         val newArgs = wrapArguments(args, tfd.fd.params)
         val funDef = TypedFunDef(tfd.fd, tfd.tps.map(any1Ops.mapTypeAnyToAny1(_)))
-        FunctionInvocation(funDef, newArgs).copiedFrom(fi)
+        val newFi = FunctionInvocation(funDef, newArgs).copiedFrom(fi)
+        wrapExprIfNeeded(newFi, tpe)
 
       // Shouldn't be needed as we come after MethodLifting
       // case mi @ MethodInvocation(rec, cd, tfd, args) =>
