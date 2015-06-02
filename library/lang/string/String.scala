@@ -13,4 +13,11 @@ case class String(chars: leon.collection.List[Char]) {
   def size = chars.size
 
   def length = size
+
+  def repeat(n: BigInt): String = {
+    require(n >= 1)
+    if (n == 1) this
+    else String(chars ++ chars).repeat(n - 1)
+  } ensuring { _.length == this.length * n }
+
 }

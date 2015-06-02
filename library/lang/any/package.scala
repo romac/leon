@@ -19,6 +19,7 @@ package object any {
 
     def +(that: Any): Any1 = native
     def -(that: Any): Any1 = native
+    def *(that: Any): Any1 = native
 
   }
 
@@ -26,6 +27,7 @@ package object any {
   def plusOp(lhs: Any, rhs: Any): Any = (lhs, rhs) match {
     case (l: Int, r: Int)       => l + r
     case (l: BigInt, r: BigInt) => l + r
+    case (l: String, r: String) => l + r
     case _                      => error[Any]("operation not supported")
   }
 
@@ -33,6 +35,14 @@ package object any {
   def minusOp(lhs: Any, rhs: Any): Any = (lhs, rhs) match {
     case (l: Int, r: Int)       => l - r
     case (l: BigInt, r: BigInt) => l - r
+    case _                      => error[Any]("operation not supported")
+  }
+
+  @library
+  def timesOp(lhs: Any, rhs: Any): Any = (lhs, rhs) match {
+    case (l: Int, r: Int)       => l * r
+    case (l: BigInt, r: BigInt) => l * r
+    case (l: String, r: BigInt) => l repeat r
     case _                      => error[Any]("operation not supported")
   }
 

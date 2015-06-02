@@ -14,7 +14,8 @@ class DynamicCalls(ctx: LeonContext, program: Program) {
 
   private val opsMap = Map(
     "$plus"  -> ops.plus.get,
-    "$minus" -> ops.minus.get
+    "$minus" -> ops.minus.get,
+    "$times" -> ops.times.get
   )
 
   private

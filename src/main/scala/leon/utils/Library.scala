@@ -25,6 +25,7 @@ case class Library(pgm: Program) {
   object anyOps {
     lazy val plus  = lookup("leon.lang.any.plusOp") collect { case fd : FunDef => fd }
     lazy val minus = lookup("leon.lang.any.minusOp") collect { case fd : FunDef => fd }
+    lazy val times = lookup("leon.lang.any.timesOp") collect { case fd : FunDef => fd }
   }
 
   def lookup(name: String): Option[Definition] = {
