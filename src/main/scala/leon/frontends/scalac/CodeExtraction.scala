@@ -189,7 +189,7 @@ trait CodeExtraction extends ASTExtractors {
         val templates: List[TempUnit] = units.reverseMap { u => u.body match {
 
           // Unit with a single package object
-          case PackageDef(refTree, List(PackageDef(inner, List(ExObjectDef(n, templ))))) if n == "package" =>
+          case PackageDef(refTree, List(PackageDef(inner, List(ExObjectDef(n, _, templ))))) if n == "package" =>
             // File name without extension
             val unitName = extractPackageRef(inner).mkString("$") + "$package"
             val id = FreshIdentifier(unitName + "$standalone")
@@ -209,10 +209,11 @@ trait CodeExtraction extends ASTExtractors {
               case t if isIgnored(t.symbol) =>
                 None
 
-              case po@ExObjectDef(n, templ) if n == "package" =>
+              case po@ExObjectDef(n, _, templ) if n == "package" =>
                 outOfSubsetError(po, "No other definitions are allowed in a file with a package object.")
 
-              case ExObjectDef(n, templ) if n != "package" =>
+              case ExObjectDef(n, sym, templ) if n != "package" =>
+                seenClasses += sym -> (Nil, templ)
                 Some(TempModule(FreshIdentifier(n), templ.body, false))
 
               /*

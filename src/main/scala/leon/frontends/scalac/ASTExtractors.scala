@@ -274,14 +274,14 @@ trait ASTExtractors {
       /** Matches an object with no type parameters, and regardless of its
        * visibility. Does not match on case objects or the automatically generated companion
        * objects of case classes (or any synthetic class). */
-      def unapply(cd: ClassDef): Option[(String,Template)] = cd match {
+      def unapply(cd: ClassDef): Option[(String, Symbol, Template)] = cd match {
         case ClassDef(_, name, tparams, impl) if
           (cd.symbol.isModuleClass || cd.symbol.hasPackageFlag) &&
           tparams.isEmpty &&
           !cd.symbol.isSynthetic &&
           !cd.symbol.isCaseClass
         => {
-          Some((name.toString, impl))
+          Some((name.toString, cd.symbol, impl))
         }
         case _ => None
       }
