@@ -10,7 +10,7 @@ package object lang {
   @ignore
   type ?!? = Any
 
-  @ignore
+  @library
   implicit class BooleanDecorations(val underlying: Boolean) {
     def holds : Boolean = {
       assert(underlying)
