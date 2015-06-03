@@ -6,7 +6,8 @@ import leon.annotation._
 import scala.language.implicitConversions
 
 package object lang {
-  @ignore
+
+  @library
   implicit class BooleanDecorations(val underlying: Boolean) {
     def holds : Boolean = {
       assert(underlying)
@@ -28,12 +29,12 @@ package object lang {
   @ignore
   def error[T](reason: java.lang.String): T = sys.error(reason)
  
-  @ignore
-  implicit class Passes[A,B](io : (A,B)) {
-    val (in, out) = io
-    def passes(tests : A => B ) : Boolean = 
-      try { tests(in) == out } catch { case _ : MatchError => true }
-  }
+  // @library
+  // implicit class Passes[A,B](io : (A,B)) {
+  //   val (in, out) = io
+  //   def passes(tests : A => B ) : Boolean =
+  //     try { tests(in) == out } catch { case _ : MatchError => true }
+  // }
 
   @ignore
   object BigInt {

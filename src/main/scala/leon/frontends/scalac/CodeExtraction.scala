@@ -1418,15 +1418,6 @@ trait CodeExtraction extends ASTExtractors {
 
           }
 
-        case ExImplicitClassConstruction(sym, args) =>
-          getClassDef(sym, sym.pos) match {
-            case ccd: CaseClassDef =>
-              CaseClass(CaseClassType(ccd, Seq()), args.map(extractTree))
-
-            case _ =>
-              outOfSubsetError(tr, "Construction of a non-case implicit class.")
-          }
-
         case ExNot(e)              => Not(extractTree(e))
         case ExUMinus(e)           => UMinus(extractTree(e))
         case ExBVUMinus(e)         => BVUMinus(extractTree(e))

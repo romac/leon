@@ -381,9 +381,12 @@ trait ASTExtractors {
         */
       def unapply(dd: DefDef): Option[(Symbol, Seq[Symbol], Seq[ValDef], Type, Tree)] = dd match {
         case DefDef(_, name, tparams, vparamss, tpt, rhs) if(
-           name != nme.CONSTRUCTOR && !dd.symbol.isSynthetic && !dd.symbol.isAccessor
+           name != nme.CONSTRUCTOR &&
+           (!dd.symbol.isSynthetic || (dd.symbol.isImplicit && dd.symbol.isMethod)) &&
+           !dd.symbol.isAccessor
         ) =>
           Some((dd.symbol, tparams.map(_.symbol), vparamss.flatten, tpt.tpe, rhs))
+
         case _ => None
       }
     }
@@ -750,15 +753,6 @@ trait ASTExtractors {
         case Apply(s @ Select(New(tpt), n), args) if n == nme.CONSTRUCTOR => {
           Some((tpt, args))
         }
-        case _ => None
-      }
-    }
-
-    object ExImplicitClassConstruction {
-      def unapply(tree: Apply): Option[(Symbol, Seq[Tree])] = tree match {
-        case a @ Apply(_, args) if a.symbol.isSynthetic && a.symbol.info.finalResultType.typeSymbol.isImplicit =>
-          Some((a.symbol.info.finalResultType.typeSymbol, args))
-
         case _ => None
       }
     }
