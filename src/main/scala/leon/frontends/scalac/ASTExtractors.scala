@@ -299,30 +299,23 @@ trait ASTExtractors {
       }
     }
 
+    private
+    def isCaseClassDef(cd: ClassDef): Boolean =
+      cd.symbol.isCase && !cd.symbol.isAbstractClass && cd.impl.body.size >= 8
+
+    private
+    def isImplicitClassDef(cd: ClassDef): Boolean =
+      cd.symbol.isImplicit
+
     object ExCaseClass {
       def unapply(cd: ClassDef): Option[(String,Symbol,Seq[(Symbol,ValDef)], Template)] = cd match {
-        case ClassDef(_, name, tparams, impl) if cd.symbol.isCase && !cd.symbol.isAbstractClass && impl.body.size >= 8 => {
+        case ClassDef(_, name, tparams, impl) if isCaseClassDef(cd) || isImplicitClassDef(cd) => {
           val constructor: DefDef = impl.children.find {
             case ExConstructorDef() => true
             case _ => false
           }.get.asInstanceOf[DefDef]
 
           val args = constructor.vparamss.flatten.map(vd => ( vd.symbol, vd))
-          Some((name.toString, cd.symbol, args, impl))
-        }
-        case _ => None
-      }
-    }
-
-    object ExImplicitClass {
-      def unapply(cd: ClassDef): Option[(String, Symbol, Seq[(Symbol, ValDef)], Template)] = cd match {
-        case ClassDef(_, name, tparams, impl) if cd.symbol.isImplicit => {
-          val constructor: DefDef = impl.children.find {
-            case ExConstructorDef() => true
-            case _                  => false
-          }.get.asInstanceOf[DefDef]
-
-          val args = constructor.vparamss.flatten.map(vd => (vd.symbol, vd))
           Some((name.toString, cd.symbol, args, impl))
         }
         case _ => None
