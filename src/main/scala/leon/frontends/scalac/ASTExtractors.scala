@@ -314,6 +314,21 @@ trait ASTExtractors {
       }
     }
 
+    object ExImplicitClass {
+      def unapply(cd: ClassDef): Option[(String, Symbol, Seq[(Symbol, ValDef)], Template)] = cd match {
+        case ClassDef(_, name, tparams, impl) if cd.symbol.isImplicit => {
+          val constructor: DefDef = impl.children.find {
+            case ExConstructorDef() => true
+            case _                  => false
+          }.get.asInstanceOf[DefDef]
+
+          val args = constructor.vparamss.flatten.map(vd => (vd.symbol, vd))
+          Some((name.toString, cd.symbol, args, impl))
+        }
+        case _ => None
+      }
+    }
+
     object ExCaseObject {
       def unapply(s: Select): Option[Symbol] = {
         if (s.tpe.typeSymbol.isModuleClass) {
@@ -735,6 +750,15 @@ trait ASTExtractors {
         case Apply(s @ Select(New(tpt), n), args) if n == nme.CONSTRUCTOR => {
           Some((tpt, args))
         }
+        case _ => None
+      }
+    }
+
+    object ExImplicitClassConstruction {
+      def unapply(tree: Apply): Option[(Symbol, Seq[Tree])] = tree match {
+        case a @ Apply(_, args) if a.symbol.isSynthetic && a.symbol.info.finalResultType.typeSymbol.isImplicit =>
+          Some((a.symbol.info.finalResultType.typeSymbol, args))
+
         case _ => None
       }
     }

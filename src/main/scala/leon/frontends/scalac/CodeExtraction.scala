@@ -410,6 +410,9 @@ trait CodeExtraction extends ASTExtractors {
         case ExCaseClass(o2, sym, args, tmpl) =>
           seenClasses += sym -> ((args, tmpl))
 
+        case ExImplicitClass(o2, sym, args, tmpl) =>
+          seenClasses += sym -> ((args, tmpl))
+
         case _ =>
       }
     }
@@ -424,6 +427,9 @@ trait CodeExtraction extends ASTExtractors {
           getClassDef(sym, t.pos)
 
         case ExCaseClass(o2, sym, args, _) =>
+          getClassDef(sym, t.pos)
+
+        case ExImplicitClass(o2, sym, args, _) =>
           getClassDef(sym, t.pos)
 
         case _ =>
@@ -769,6 +775,9 @@ trait CodeExtraction extends ASTExtractors {
         case ExCaseClass(_, csym, _, tmpl) =>
           extractFromClass(csym, tmpl)
 
+        case ExImplicitClass(_, csym, _, tmpl) =>
+          extractFromClass(csym, tmpl)
+
         case _ =>
       }
     }
@@ -834,6 +843,9 @@ trait CodeExtraction extends ASTExtractors {
         case ExCaseClass(o2, sym, args, _) =>
           Some(classesToClasses(sym))
 
+        case ExImplicitClass(o2, sym, args, _) =>
+          Some(classesToClasses(sym))
+
         // Taking accessor functions will duplicate work for strict fields, but we need them in case of lazy fields
         case ExFunctionDef(sym, tparams, params, _, body) =>
           Some(defsToDefs(sym))
@@ -853,6 +865,7 @@ trait CodeExtraction extends ASTExtractors {
         case ExCaseClassSyntheticJunk() =>
         case ExAbstractClass(_,_,_) =>
         case ExCaseClass(_,_,_,_) =>
+        case ExImplicitClass(_,_,_,_) =>
         case ExConstructorDef() =>
         case ExFunctionDef(_, _, _, _, _) =>
         case ExLazyAccessorFunction(_, _, _) =>
@@ -1403,6 +1416,15 @@ trait CodeExtraction extends ASTExtractors {
             case _ =>
               outOfSubsetError(tr, "Construction of a non-case class.")
 
+          }
+
+        case ExImplicitClassConstruction(sym, args) =>
+          getClassDef(sym, sym.pos) match {
+            case ccd: CaseClassDef =>
+              CaseClass(CaseClassType(ccd, Seq()), args.map(extractTree))
+
+            case _ =>
+              outOfSubsetError(tr, "Construction of a non-case implicit class.")
           }
 
         case ExNot(e)              => Not(extractTree(e))
