@@ -127,7 +127,7 @@ object Expressions {
 
   case class Forall(args: Seq[ValDef], body: Expr) extends Expr {
     require(body.getType == BooleanType)
-    def getType = BooleanType
+    val getType = BooleanType
   }
 
   case class This(ct: ClassType) extends Expr with Terminal {
@@ -174,7 +174,7 @@ object Expressions {
   case class Passes(in: Expr, out : Expr, cases : Seq[MatchCase]) extends Expr {
     require(cases.nonEmpty)
 
-    def getType = BooleanType
+    val getType = BooleanType
     
     def asConstraint = {
       val defaultCase = SimpleCase(WildcardPattern(None), out)
@@ -221,7 +221,7 @@ object Expressions {
 
   /* Propositional logic */
   case class And(exprs: Seq[Expr]) extends Expr {
-    def getType = BooleanType
+    val getType = BooleanType
 
     require(exprs.size >= 2)
   }
@@ -231,7 +231,7 @@ object Expressions {
   }
 
   case class Or(exprs: Seq[Expr]) extends Expr {
-    def getType = BooleanType
+    val getType = BooleanType
 
     require(exprs.size >= 2)
   }
@@ -241,15 +241,15 @@ object Expressions {
   }
 
   case class Implies(lhs: Expr, rhs: Expr) extends Expr {
-    def getType = BooleanType
+    val getType = BooleanType
   }
 
   case class Not(expr: Expr) extends Expr {
-    def getType = BooleanType
+    val getType = BooleanType
   }
 
   case class Equals(lhs: Expr, rhs: Expr) extends Expr {
-    def getType = BooleanType
+    val getType = BooleanType
   }
 
   case class Variable(id: Identifier) extends Expr with Terminal {
@@ -270,14 +270,14 @@ object Expressions {
   }
 
   case class IntLiteral(value: Int) extends Literal[Int] {
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class InfiniteIntegerLiteral(value: BigInt) extends Literal[BigInt] {
-    def getType = IntegerType
+    val getType = IntegerType
   }
 
   case class BooleanLiteral(value: Boolean) extends Literal[Boolean] {
-    def getType = BooleanType
+    val getType = BooleanType
   }
 
   case class UnitLiteral() extends Literal[Unit] {
@@ -290,7 +290,7 @@ object Expressions {
   }
 
   abstract class InstanceOfExpr(classType: TypeTree, expr: Expr) extends Expr {
-    def getType = BooleanType
+    val getType = BooleanType
   }
 
   case class CaseClassInstanceOf(classType: CaseClassType, expr: Expr) extends InstanceOfExpr(classType, expr)
@@ -333,19 +333,19 @@ object Expressions {
   /* Arithmetic */
   case class Plus(lhs: Expr, rhs: Expr) extends Expr {
     require(lhs.getType == IntegerType && rhs.getType == IntegerType)
-    def getType = IntegerType
+    val getType = IntegerType
   }
   case class Minus(lhs: Expr, rhs: Expr) extends Expr { 
     require(lhs.getType == IntegerType && rhs.getType == IntegerType)
-    def getType = IntegerType
+    val getType = IntegerType
   }
   case class UMinus(expr: Expr) extends Expr { 
     require(expr.getType == IntegerType)
-    def getType = IntegerType
+    val getType = IntegerType
   }
   case class Times(lhs: Expr, rhs: Expr) extends Expr { 
     require(lhs.getType == IntegerType && rhs.getType == IntegerType)
-    def getType = IntegerType
+    val getType = IntegerType
   }
   /*
    * Division and Remainder follows Java/Scala semantics. Division corresponds
@@ -359,7 +359,7 @@ object Expressions {
    */
   case class Division(lhs: Expr, rhs: Expr) extends Expr { 
     require(lhs.getType == IntegerType && rhs.getType == IntegerType)
-    def getType = IntegerType
+    val getType = IntegerType
   }
   case class Remainder(lhs: Expr, rhs: Expr) extends Expr { 
     require(lhs.getType == IntegerType && rhs.getType == IntegerType)
@@ -367,67 +367,67 @@ object Expressions {
   }
   case class Modulo(lhs: Expr, rhs: Expr) extends Expr { 
     require(lhs.getType == IntegerType && rhs.getType == IntegerType)
-    def getType = IntegerType
+    val getType = IntegerType
   }
   case class LessThan(lhs: Expr, rhs: Expr) extends Expr { 
-    def getType = BooleanType
+    val getType = BooleanType
   }
   case class GreaterThan(lhs: Expr, rhs: Expr) extends Expr { 
-    def getType = BooleanType
+    val getType = BooleanType
   }
   case class LessEquals(lhs: Expr, rhs: Expr) extends Expr { 
-    def getType = BooleanType
+    val getType = BooleanType
   }
   case class GreaterEquals(lhs: Expr, rhs: Expr) extends Expr {
-    def getType = BooleanType
+    val getType = BooleanType
   }
 
   /* Bit-vector arithmetic */
   case class BVPlus(lhs: Expr, rhs: Expr) extends Expr {
     require(lhs.getType == Int32Type && rhs.getType == Int32Type)
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class BVMinus(lhs: Expr, rhs: Expr) extends Expr { 
     require(lhs.getType == Int32Type && rhs.getType == Int32Type)
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class BVUMinus(expr: Expr) extends Expr { 
     require(expr.getType == Int32Type)
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class BVTimes(lhs: Expr, rhs: Expr) extends Expr { 
     require(lhs.getType == Int32Type && rhs.getType == Int32Type)
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class BVDivision(lhs: Expr, rhs: Expr) extends Expr { 
     require(lhs.getType == Int32Type && rhs.getType == Int32Type)
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class BVRemainder(lhs: Expr, rhs: Expr) extends Expr { 
     require(lhs.getType == Int32Type && rhs.getType == Int32Type)
-    def getType = Int32Type
+    val getType = Int32Type
   }
 
   case class BVNot(expr: Expr) extends Expr { 
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class BVAnd(lhs: Expr, rhs: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class BVOr(lhs: Expr, rhs: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class BVXOr(lhs: Expr, rhs: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class BVShiftLeft(lhs: Expr, rhs: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class BVAShiftRight(lhs: Expr, rhs: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class BVLShiftRight(lhs: Expr, rhs: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
 
   /* Set expressions */
@@ -436,10 +436,10 @@ object Expressions {
   }
 
   case class ElementOfSet(element: Expr, set: Expr) extends Expr {
-    def getType = BooleanType
+    val getType = BooleanType
   }
   case class SetCardinality(set: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
   case class SubsetOf(set1: Expr, set2: Expr) extends Expr {
     def getType  = BooleanType
@@ -473,7 +473,7 @@ object Expressions {
     def getType = map.getType
   }
   case class MapIsDefinedAt(map: Expr, key: Expr) extends Expr {
-    def getType = BooleanType
+    val getType = BooleanType
   }
 
 
@@ -497,7 +497,7 @@ object Expressions {
   }
 
   case class ArrayLength(array: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
 
   case class NonemptyArray(elems: Map[Int, Expr], defaultLength: Option[(Expr, Expr)]) extends Expr {
@@ -541,12 +541,12 @@ object Expressions {
 
   @deprecated("3.0", "Leon does not guarantee to correctly handle this expression")
   case class SetMin(set: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
 
   @deprecated("3.0", "Leon does not guarantee to correctly handle this expression")
   case class SetMax(set: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
 
   @deprecated("3.0", "Leon does not guarantee to correctly handle this expression")
@@ -559,11 +559,11 @@ object Expressions {
   }
   @deprecated("3.0", "Leon does not guarantee to correctly handle this expression")
   case class Multiplicity(element: Expr, multiset: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
   @deprecated("3.0", "Leon does not guarantee to correctly handle this expression")
   case class MultisetCardinality(multiset: Expr) extends Expr {
-    def getType = Int32Type
+    val getType = Int32Type
   }
   @deprecated("3.0", "Leon does not guarantee to correctly handle this expression")
   case class MultisetIntersection(multiset1: Expr, multiset2: Expr) extends Expr {
