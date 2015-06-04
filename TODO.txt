@@ -1,0 +1,6 @@
+
+[ ] Implicit classes show up as counter-examples
+
+> Now that we extract implicit classes as case classes, they sometime show up
+> as counter-examples.
+
