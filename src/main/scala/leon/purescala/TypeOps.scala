@@ -276,6 +276,10 @@ object TypeOps {
               val newOb = ob.map(id => freshId(id, expType))
               (LiteralPattern(newOb,lit), (ob zip newOb).toMap)
 
+            case (PrimitivePattern(ob, litType), expType) =>
+              val newOb = ob.map(id => freshId(id, expType))
+              (PrimitivePattern(newOb, litType), (ob zip newOb).toMap)
+
             case _ =>
               sys.error("woot!?")
           }
