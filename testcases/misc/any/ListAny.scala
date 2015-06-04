@@ -427,14 +427,16 @@ sealed abstract class ListAny {
     case Cons(_, t) => t.find(p)
   }} ensuring { _.isDefined == exists(p) }
 
-  def groupBy(f: Any => Any): Map[Any, ListAny] = this match {
-    case Nil() => Map.empty[Any, ListAny]
-    case Cons(h, t) =>
-      val key: Any = f(h)
-      val rest: Map[Any, ListAny] = t.groupBy(f)
-      val prev: ListAny = if (rest isDefinedAt key) rest(key) else Nil()
-      (rest ++ Map((key, h :: prev))) : Map[Any, ListAny]
-  }
+  // FIXME: groupBy is not properly typed
+  //
+  // def groupBy(f: Any => Any): Map[Any, ListAny] = this match {
+  //   case Nil() => Map.empty[Any, ListAny]
+  //   case Cons(h, t) =>
+  //     val key: Any = f(h)
+  //     val rest: Map[Any, ListAny] = t.groupBy(f)
+  //     val prev: ListAny = if (rest isDefinedAt key) rest(key) else Nil()
+  //     (rest ++ Map((key, h :: prev))) : Map[Any, ListAny]
+  // }
 
   def takeWhile(p: Any => Boolean): ListAny = { this match {
     case Cons(h,t) if p(h) => Cons(h, t.takeWhile(p))

@@ -40,13 +40,14 @@ class Any1Ops(ctx: LeonContext, program: Program) {
     child
   }
 
-  // We include Untyped here as Untyped PureScala trees should often be
-  // typed as Any.
   def isAny(tpe: TypeTree): Boolean =
-    tpe == AnyType || isSubtypeOf(tpe, Any1ClassType) || tpe == Untyped
+    tpe == AnyType || isSubtypeOf(tpe, Any1ClassType)
 
   def isAny1(tpe: TypeTree): Boolean =
     tpe == Any1ClassType
+
+  def isUntyped(tpe: TypeTree): Boolean =
+    tpe == Untyped
 
   def wrap(expr: Expr): Expr = {
     if (!isWrappable(expr.getType)) {
