@@ -154,7 +154,7 @@ class WrapAnyExprs(any1Ops: Any1Ops) extends TransformationPhase {
 
       case TuplePattern(binder, subPats) =>
         val newBinder = binder map (id => id.setType(any1Ops.mapTypeAnyToAny1(id.getType)))
-        val newSubPatterns = subPats map (p => wrapPattern(p, patternType(p)))
+        val newSubPatterns = subPats map (p => wrapPattern(p, Untyped))
         TuplePattern(newBinder, newSubPatterns).copiedFrom(pat)
 
       case WildcardPattern(binder) =>
