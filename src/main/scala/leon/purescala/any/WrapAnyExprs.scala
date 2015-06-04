@@ -108,6 +108,21 @@ class WrapAnyExprs(any1Ops: Any1Ops) extends TransformationPhase {
         val newCc = CaseClass(newCcTpe, wrapArguments(args, ccTpe.fields)).copiedFrom(cc)
         wrapExprIfNeeded(newCc, tpe)
 
+      case s @ FiniteSet(elements, base) =>
+        val newBase = any1Ops.mapTypeAnyToAny1(base)
+        val newElems = elements.map(wrapExpr(_, newBase))
+        FiniteSet(newElems, newBase).copiedFrom(s)
+
+      case r @ Require(pred, body) =>
+        r
+        // Require(wrapExpr(pred, pred.getType),
+        //         wrapExpr(body, body.getType)).copiedFrom(r)
+
+      case e @ Ensuring(body, pred) =>
+        e
+        // Ensuring(wrapExpr(body, body.getType),
+        //          wrapExpr(pred, pred.getType)).copiedFrom(e)
+
       case t: Terminal =>
         wrapExprIfNeeded(t, tpe).copiedFrom(t)
 
@@ -143,18 +158,20 @@ class WrapAnyExprs(any1Ops: Any1Ops) extends TransformationPhase {
         CaseClassPattern(None, wrapperType, Seq(WildcardPattern(binder).copiedFrom(pat))).copiedFrom(pat)
 
       case TuplePattern(binder, subPats) if any1Ops.isAny(scrutTpe) =>
-        val patType = patternType(pat)
+        val patType     = patternType(pat)
         val wrapperType = any1Ops.wrapperTypeFor(patType)
-        val newPat = wrapPattern(pat, patType)
+        val newPat      = wrapPattern(pat, patType)
         CaseClassPattern(None, wrapperType, Seq(newPat)).copiedFrom(pat)
 
       case TuplePattern(binder, subPats) =>
         val newBinder = binder map (id => id.setType(any1Ops.mapTypeAnyToAny1(id.getType)))
-        val newSubPatterns = subPats map (p => wrapPattern(p, Untyped))
+        val newSubPatterns = subPats map (p => wrapPattern(p, patternType(p)))
         TuplePattern(newBinder, newSubPatterns).copiedFrom(pat)
 
       case WildcardPattern(binder) =>
-        val newBinder = binder map (id => id.setType(any1Ops.mapTypeAnyToAny1(id.getType)))
+        val newBinder = binder map { id =>
+          id.setType(any1Ops.mapTypeAnyToAny1(id.getType))
+        }
         WildcardPattern(newBinder).copiedFrom(pat)
 
       case LiteralPattern(binder, lit) if any1Ops.isAny(scrutTpe) =>
