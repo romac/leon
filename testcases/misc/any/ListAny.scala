@@ -6,6 +6,65 @@ import leon.lang._
 import leon.collection._
 import leon.annotation._
 
+sealed abstract class OptionA {
+
+  def get: Any = {
+    require(this.isDefined)
+    this match {
+      case SomeA(x) => x
+    }
+  }
+
+  def getOrElse(default: Any) = this match {
+    case SomeA(v) => v
+    case NoneA()  => default
+  }
+
+  def orElse(or: OptionA) = this match {
+    case SomeA(v) => this
+    case NoneA() => or
+  }
+
+  def isEmpty = this match {
+    case SomeA(v) => false
+    case NoneA() =>  true
+  }
+
+  def nonEmpty  = !isEmpty
+
+  def isDefined = !isEmpty
+
+
+  // Higher-order API
+  def map(f: Any => Any) = { this match {
+    case NoneA() => NoneA()
+    case SomeA(x) => SomeA(f(x))
+  }} ensuring { _.isDefined == this.isDefined }
+
+  def flatMap(f: Any => OptionA) = this match {
+    case NoneA() => NoneA()
+    case SomeA(x) => f(x)
+  }
+
+  def filter(p: Any => Boolean) = this match {
+    case SomeA(x) if p(x) => SomeA(x)
+    case _ => NoneA()
+  }
+
+  def withFilter(p: Any => Boolean) = filter(p)
+
+  def forall(p: Any => Boolean) = this match {
+    case SomeA(x) if !p(x) => false
+    case _ => true
+  }
+
+  def exists(p: Any => Boolean) = !forall(!p(_))
+
+}
+
+case class SomeA(v: Any) extends OptionA
+case class NoneA() extends OptionA
+
 sealed abstract class ListAny {
 
   def size: BigInt = (this match {
@@ -221,18 +280,18 @@ sealed abstract class ListAny {
     }
   }
 
-  def lastOption: Option[Any] = this match {
+  def lastOption: OptionA = this match {
     case Cons(h, t) =>
-      t.lastOption.orElse(Some(h))
+      t.lastOption.orElse(SomeA(h))
     case Nil() =>
-      None()
+      NoneA()
   }
 
-  def firstOption: Option[Any] = this match {
+  def firstOption: OptionA = this match {
     case Cons(h, t) =>
-      Some(h)
+      SomeA(h)
     case Nil() =>
-      None()
+      NoneA()
   }
 
   def unique: ListAny = this match {
@@ -362,9 +421,9 @@ sealed abstract class ListAny {
 
   def exists(p: Any => Boolean) = !forall(!p(_))
 
-  def find(p: Any => Boolean): Option[Any] = { this match {
-    case Nil() => None()
-    case Cons(h, t) if p(h) => Some(h)
+  def find(p: Any => Boolean): OptionA = { this match {
+    case Nil() => NoneA()
+    case Cons(h, t) if p(h) => SomeA(h)
     case Cons(_, t) => t.find(p)
   }} ensuring { _.isDefined == exists(p) }
 
