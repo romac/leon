@@ -1108,12 +1108,6 @@ trait CodeExtraction extends ASTExtractors {
           }
           passes(ine, oute, rc)
 
-        case ExDynamicCall(opName, lhs, rhs) =>
-          val lhsTree = extractTree(lhs)
-          val rhsTree = extractTree(rhs)
-
-          DynamicCall(opName, lhsTree, rhsTree)
-
         case ExArrayLiteral(tpe, args) =>
           finiteArray(args.map(extractTree), None, extractType(tpe)(dctx, current.pos))
 

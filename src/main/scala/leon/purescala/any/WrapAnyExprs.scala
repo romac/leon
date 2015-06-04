@@ -24,8 +24,6 @@ class WrapAnyExprs(any1Ops: Any1Ops) extends TransformationPhase {
 
   def apply(ctx: LeonContext, program: Program): Program = {
 
-    val dynamicCalls = new DynamicCalls(ctx, program)
-
     def wrapArguments(args: Seq[Expr], params: Seq[ValDef]): Seq[Expr] = {
       require(args.length == params.length)
 
@@ -86,15 +84,6 @@ class WrapAnyExprs(any1Ops: Any1Ops) extends TransformationPhase {
       //   val newArgs = wrapArguments(args, tfd.fd.params)
       //   val funDef = TypedFunDef(tfd.fd, tfd.tps.map(any1Ops.mapTypeAnyToAny1(_)))
       //   MethodInvocation(rec, cd, funDef, newArgs).copiedFrom(mi)
-
-      case dc @ DynamicCall(op, l, r) =>
-        val lhs = wrapExpr(l, l.getType)
-        val rhs = wrapExpr(r, r.getType)
-
-        dynamicCalls.desugar(op, lhs, rhs) match {
-          case Some(call) => call.copiedFrom(dc)
-          case None       => ctx.reporter.fatalError(s"Unknown dynamic call $dc")
-        }
 
       case ld @ LetDef(tfd, body) =>
         LetDef(tfd, wrapExpr(body, tfd.returnType)).copiedFrom(ld)

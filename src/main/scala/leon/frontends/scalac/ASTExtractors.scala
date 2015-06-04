@@ -481,25 +481,6 @@ trait ASTExtractors {
         }
       }
     }
-
-    // TODO: Add support for N-ary operations, not just binary ones.
-    object ExDynamicCall {
-      def unapply(tree: Apply): Option[(String, Tree, Tree)] = tree match {
-        case
-          Apply(
-            Select(
-              Apply(
-                ExSelected("leon", "lang", "any", "package", "Any1Ops"),
-                lhs :: Nil
-              ),
-              ExNamed(opName)
-            ),
-            rhs :: Nil
-          ) => Some((opName, lhs, rhs))
-        case _ => None
-      }
-    }
-
   }
 
   object ExpressionExtractors {

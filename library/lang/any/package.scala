@@ -2,9 +2,10 @@
 
 package leon.lang
 
-import leon.lang.string._
-import leon.annotation._
 import scala.language.implicitConversions
+
+import leon.annotation._
+import leon.lang.string._
 
 package object any {
 
@@ -14,12 +15,12 @@ package object any {
   @ignore
   def native[A]: A = throw new RuntimeException("native should never be called")
 
-  @ignore
+  @library
   implicit class Any1Ops(val value: Any) {
 
-    def +(that: Any): Any1 = native
-    def -(that: Any): Any1 = native
-    def *(that: Any): Any1 = native
+    def +(other: Any): Any = plusOp(value, other)
+    def -(other: Any): Any = minusOp(value, other)
+    def *(other: Any): Any = timesOp(value, other)
 
   }
 
