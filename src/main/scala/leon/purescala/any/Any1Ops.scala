@@ -50,7 +50,8 @@ class Any1Ops(ctx: LeonContext, program: Program) {
 
   def wrap(expr: Expr): Expr = {
     if (!isWrappable(expr.getType)) {
-      ctx.reporter.error(s"Cannot treat value of type ${expr.getType} as Any")
+      // new Exception().printStackTrace()
+      ctx.reporter.error(s"Cannot treat value ${expr} (${expr.getPos}) of type ${expr.getType} as Any")
       expr
     }
     else
