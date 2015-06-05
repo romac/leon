@@ -6,29 +6,29 @@ package any
 
 import Definitions.{Program, UnitDef}
 
-object DesugarAnyPhase extends TransformationPhase {
+object EncodeAnyPhase extends TransformationPhase {
 
-  val name = "Desugar Any"
-  val description = "Provide support for Any via case class wrappers"
+  val name = "Encode Any"
+  val description = "Encode Any as a sum type"
 
   def apply(ctx: LeonContext, program: Program): Program = {
 
-    val any1Ops = new Any1Ops(ctx, program)
+    val Any1Ops = new Any1Ops(ctx, program)
 
     val phases =
-      new ReplaceTypeAnyWithAny1(any1Ops) andThen
-      new WrapAnyExprs(any1Ops)           andThen
-      new AddModuleAnyToUnit(any1Ops)
+      new ReplaceTypes(Any1Ops)           andThen
+      new LiftExprs(Any1Ops)              andThen
+      new AddModuleAnyToUnit(Any1Ops)
 
     phases.run(ctx)(program)
   }
 
-  class AddModuleAnyToUnit(any1Ops: Any1Ops) extends TransformationPhase {
+  class AddModuleAnyToUnit(Any1Ops: Any1Ops) extends TransformationPhase {
     val name = "Add Module Any"
     val description = "Add module Any to program's unit"
 
     def walkUnit(unit: UnitDef, program: Program): UnitDef = {
-      unit.copy(modules = any1Ops.Any1ModuleDef +: unit.modules)
+      unit.copy(modules = Any1Ops.Any1ModuleDef +: unit.modules)
     }
 
     // FIXME: Should add a new unit for Any, rather than a module per unit.

@@ -8,7 +8,7 @@ import purescala.ScalaPrinter
 
 import purescala.{MethodLifting, CompleteAbstractDefinitions, CheckADTFieldsTypes}
 import purescala.{MethodLifting, CompleteAbstractDefinitions}
-import purescala.any.DesugarAnyPhase
+import purescala.any.EncodeAnyPhase
 import synthesis.{ConvertWithOracle, ConvertHoles}
 import verification.InjectAsserts
 
@@ -17,18 +17,18 @@ object PreprocessingPhase extends TransformationPhase {
   val name = "preprocessing"
   val description = "Various preprocessings on Leon programs"
 
-  val optDesugarAny = LeonFlagOptionDef("any", "Enable support for Any", false)
+  val optEncodeAny = LeonFlagOptionDef("any", "Enable support for Any", false)
 
-  override val definedOptions: Set[LeonOptionDef[Any]] = Set(optDesugarAny)
+  override val definedOptions: Set[LeonOptionDef[Any]] = Set(optEncodeAny)
 
   def apply(ctx: LeonContext, p: Program): Program = {
-    val desugarAny = if (ctx.findOptionOrDefault(optDesugarAny)) DesugarAnyPhase
+    val encodeAny = if (ctx.findOptionOrDefault(optEncodeAny)) EncodeAnyPhase
                      else NoopPhase[Program]()
 
     val phases =
       ScopingPhase                  andThen
       MethodLifting                 andThen
-      desugarAny                    andThen
+      encodeAny                    andThen
       TypingPhase                   andThen
       ConvertWithOracle             andThen
       ConvertHoles                  andThen

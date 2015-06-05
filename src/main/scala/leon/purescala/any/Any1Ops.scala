@@ -16,9 +16,9 @@ import scala.collection.mutable.Map
 
 class Any1Ops(ctx: LeonContext, program: Program) {
 
-  private val wrappers = Map[TypeTree, CaseClassDef]()
+  private val constructors = Map[TypeTree, CaseClassDef]()
 
-  def allWrappers: Seq[CaseClassDef] = wrappers.values.toSeq
+  def allConstructors: Seq[CaseClassDef] = constructors.values.toSeq
 
   lazy val Any1ClassDef: AbstractClassDef =
     program.library.Any1.get
@@ -31,8 +31,8 @@ class Any1Ops(ctx: LeonContext, program: Program) {
 
   lazy val Any1ModuleDef: ModuleDef = {
     Any1ClassDef.registerChildren(UnexpectedDef)
-    val classDefs = UnexpectedDef +: allWrappers
-    ModuleDef(FreshIdentifier("any1Wrapper"), classDefs, false)
+    val classDefs = UnexpectedDef +: allConstructors
+    ModuleDef(FreshIdentifier("any1constructor"), classDefs, false)
   }
 
   def registerChild(child: ClassDef): ClassDef = {
@@ -49,17 +49,17 @@ class Any1Ops(ctx: LeonContext, program: Program) {
   def isUntyped(tpe: TypeTree): Boolean =
     tpe == Untyped
 
-  def wrap(expr: Expr): Expr = {
-    if (!isWrappable(expr.getType)) {
+  def lift(expr: Expr): Expr = {
+    if (!canBeLifted(expr.getType)) {
       // new Exception().printStackTrace()
       ctx.reporter.error(s"Cannot treat value ${expr} (${expr.getPos}) of type ${expr.getType} as Any")
       expr
     }
     else
-      CaseClass(wrapperTypeFor(expr.getType), Seq(expr))
+      CaseClass(liftType(expr.getType), Seq(expr))
   }
 
-  def isWrappable(tpe: TypeTree): Boolean = tpe match {
+  def canBeLifted(tpe: TypeTree): Boolean = tpe match {
     case tpe: TypeParameter                                                            => false
     case tpe: ClassType         if tpe.tps.nonEmpty                                    => false
     case SetType(base)          if typeContainsAny(base)                               => false
@@ -70,16 +70,16 @@ class Any1Ops(ctx: LeonContext, program: Program) {
     case _                                                                             => true
   }
 
-  def wrapperTypeFor(tpe: TypeTree): CaseClassType = tpe match {
+  def liftType(tpe: TypeTree): CaseClassType = tpe match {
     case cTpe: ClassType =>
       val rootClass = rootClassDef(cTpe.classDef)
       val rootClassType = classDefToClassType(rootClass)
-      val wrapperDef = wrappers.getOrElseUpdate(rootClassType, wrapClass(rootClass))
-      classDefToClassType(wrapperDef).asInstanceOf[CaseClassType]
+      val constructorDef = constructors.getOrElseUpdate(rootClassType, liftClass(rootClass))
+      classDefToClassType(constructorDef).asInstanceOf[CaseClassType]
 
     case _ =>
-      val wrapperDef = wrappers.getOrElseUpdate(tpe, wrapPrimitive(tpe))
-      classDefToClassType(wrapperDef).asInstanceOf[CaseClassType]
+      val constructorDef = constructors.getOrElseUpdate(tpe, liftPrimitive(tpe))
+      classDefToClassType(constructorDef).asInstanceOf[CaseClassType]
   }
 
   def typeContainsAny(tpe: TypeTree): Boolean =
@@ -94,47 +94,47 @@ class Any1Ops(ctx: LeonContext, program: Program) {
     case _       => None
   }
 
-  def wrapClass(cd: ClassDef): CaseClassDef = {
-    val wrapper     = CaseClassDef(FreshIdentifier("Any1$" + cd.id.name), Seq(), Some(Any1ClassType), false).setPos(cd)
-    val wrapperType = classDefToClassType(wrapper, Seq())
+  def liftClass(cd: ClassDef): CaseClassDef = {
+    val constructor     = CaseClassDef(FreshIdentifier("Any1$" + cd.id.name), Seq(), Some(Any1ClassType), false).setPos(cd)
+    val liftType = classDefToClassType(constructor, Seq())
 
     val valueType = classDefToClassType(cd)
     val valueId   = FreshIdentifier("value", valueType).setPos(cd)
     val field     = ValDef(valueId.setPos(cd))
 
-    wrapper.setFields(Seq(field))
+    constructor.setFields(Seq(field))
 
-    registerChild(wrapper)
-    wrappers += classDefToClassType(cd) -> wrapper
+    registerChild(constructor)
+    constructors += classDefToClassType(cd) -> constructor
 
-    wrapper
+    constructor
   }
 
-  def wrapPrimitive(tpe: TypeTree): CaseClassDef = {
+  def liftPrimitive(tpe: TypeTree): CaseClassDef = {
     val name        = typeName(tpe)
-    val wrapper     = CaseClassDef(FreshIdentifier("Any1$" + name), Seq(), Some(Any1ClassType), false)
-    val wrapperType = classDefToClassType(wrapper, Seq())
+    val constructor = CaseClassDef(FreshIdentifier("Any1$" + name), Seq(), Some(Any1ClassType), false)
+    val liftedType  = classDefToClassType(constructor, Seq())
 
     val valueId   = FreshIdentifier("value", tpe)
     val field     = ValDef(valueId)
 
-    wrapper.setFields(Seq(field))
+    constructor.setFields(Seq(field))
 
-    registerChild(wrapper)
-    wrappers += tpe -> wrapper
+    registerChild(constructor)
+    constructors += tpe -> constructor
 
-    wrapper
+    constructor
   }
 
-  def unwrapExpr(expr: Expr): Expr = {
-    def unwrap(t: Expr): Option[Expr] = t match {
+  def unliftExpr(expr: Expr): Expr = {
+    def unlift(t: Expr): Option[Expr] = t match {
       case CaseClass(ct, value :: _) if isSubtypeOf(ct, Any1ClassType) =>
         Some(value)
 
       case _ => None
     }
 
-    postMap(unwrap)(expr)
+    postMap(unlift)(expr)
   }
 
   private var typeId = 0

@@ -13,22 +13,22 @@ import ExprOps._
 import DefOps._
 import TypeOps._
 
-class WrapAnyExprs(Any1Ops: Any1Ops) extends TransformationPhase {
+class LiftExprs(Any1Ops: Any1Ops) extends TransformationPhase {
 
-  val name = "Wrap Any Exprs"
-  val description = "Wrap expressions into the appropriate Any1 subtype wherever needed"
+  val name = "Lift Expressions to Any1"
+  val description = "Lift expressions into the Any1 sum type by wrapping them with the appropriate constructor"
 
   def apply(ctx: LeonContext, program: Program): Program = {
-    WrapAnyExprTransformer.transformProgram(program)
+    LiftExprTransformer.transformProgram(program)
   }
 
-  object WrapAnyExprTransformer extends TransformerWithType {
+  object LiftExprTransformer extends TransformerWithType {
 
-    def wrapExpr(expr: Expr, tpe: TypeTree = Any1Ops.Any1ClassType, ifNeeded: Boolean = true): Expr =
-      if (ifNeeded && needsWrapper(expr, tpe)) Any1Ops.wrap(expr)
+    def liftExpr(expr: Expr, tpe: TypeTree = Any1Ops.Any1ClassType, ifNeeded: Boolean = true): Expr =
+      if (ifNeeded && needswrapper(expr, tpe)) Any1Ops.lift(expr)
       else expr
 
-    def needsWrapper(expr: Expr, tpe: TypeTree): Boolean =
+    def needswrapper(expr: Expr, tpe: TypeTree): Boolean =
       Any1Ops.isAny(tpe) && !Any1Ops.isAny1(expr.getType)
 
     override
@@ -38,11 +38,11 @@ class WrapAnyExprs(Any1Ops: Any1Ops) extends TransformationPhase {
     override
     def transformPattern(pat: Pattern, scrutTpe: TypeTree): Pattern = (pat match {
       case InstanceOfPattern(binder, ct) if Any1Ops.isAny(scrutTpe) || Any1Ops.isUntyped(scrutTpe) =>
-        val wrapperTpe = Any1Ops.wrapperTypeFor(ct)
+        val wrapperTpe = Any1Ops.liftType(ct)
         CaseClassPattern(None, wrapperTpe, Seq(pat))
 
       case CaseClassPattern(_, ct, _) if Any1Ops.isAny(scrutTpe) =>
-        val wrapperTpe = Any1Ops.wrapperTypeFor(ct)
+        val wrapperTpe = Any1Ops.liftType(ct)
         val newPat     = transformPattern(pat, ct)
 
         CaseClassPattern(None, wrapperTpe, Seq(newPat))
@@ -58,7 +58,7 @@ class WrapAnyExprs(Any1Ops: Any1Ops) extends TransformationPhase {
       case PrimitivePattern(binder, tpe) =>
         require(Any1Ops.isAny(scrutTpe) || Any1Ops.isUntyped(scrutTpe))
 
-        val wrapperTpe = Any1Ops.wrapperTypeFor(tpe)
+        val wrapperTpe = Any1Ops.liftType(tpe)
         val newPat     = WildcardPattern(binder).copiedFrom(pat)
 
         CaseClassPattern(None, wrapperTpe, Seq(newPat))
@@ -82,7 +82,7 @@ class WrapAnyExprs(Any1Ops: Any1Ops) extends TransformationPhase {
         WildcardPattern(newBinder)
 
       case LiteralPattern(binder, lit) if Any1Ops.isAny(scrutTpe) =>
-        val wrapperTpe = Any1Ops.wrapperTypeFor(lit.getType)
+        val wrapperTpe = Any1Ops.liftType(lit.getType)
 
         CaseClassPattern(None, wrapperTpe, Seq(pat))
 
@@ -99,16 +99,16 @@ class WrapAnyExprs(Any1Ops: Any1Ops) extends TransformationPhase {
     def transform(expr: Expr, tpe: TypeTree): Expr = expr match {
 
       case AnyInstanceOf(cd: ClassType, v) =>
-        val wrapperTpe = Any1Ops.wrapperTypeFor(cd)
+        val wrapperTpe = Any1Ops.liftType(cd)
         val newSubject = transform(v)
         val newExpr    = CaseClassInstanceOf(wrapperTpe, newSubject)
 
-        wrapExpr(newExpr, tpe)
+        liftExpr(newExpr, tpe)
 
       case _ =>
         val newExpr = super.transform(expr, tpe)
 
-        wrapExpr(newExpr, tpe)
+        liftExpr(newExpr, tpe)
     }
   }
 
