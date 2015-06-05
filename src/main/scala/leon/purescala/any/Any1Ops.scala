@@ -14,11 +14,7 @@ import DefOps._
 
 import scala.collection.mutable.Map
 
-class Any1Ops(ctx: LeonContext, program: Program) {
-
-  private val constructors = Map[TypeTree, CaseClassDef]()
-
-  def allConstructors: Seq[CaseClassDef] = constructors.values.toSeq
+trait AnyDefs { self: Any1Ops =>
 
   lazy val Any1ClassDef: AbstractClassDef =
     program.library.Any1.get
@@ -34,6 +30,14 @@ class Any1Ops(ctx: LeonContext, program: Program) {
     val classDefs = UnexpectedDef +: allConstructors
     ModuleDef(FreshIdentifier("any1constructor"), classDefs, false)
   }
+
+}
+
+class Any1Ops(val ctx: LeonContext, val program: Program) extends AnyDefs {
+
+  private val constructors = Map[TypeTree, CaseClassDef]()
+
+  def allConstructors: Seq[CaseClassDef] = constructors.values.toSeq
 
   def registerChild(child: ClassDef): ClassDef = {
     Any1ClassDef.registerChildren(child)
@@ -72,13 +76,15 @@ class Any1Ops(ctx: LeonContext, program: Program) {
 
   def liftType(tpe: TypeTree): CaseClassType = tpe match {
     case cTpe: ClassType =>
-      val rootClass = rootClassDef(cTpe.classDef)
-      val rootClassType = classDefToClassType(rootClass)
+      val rootClass      = rootClassDef(cTpe.classDef)
+      val rootClassType  = classDefToClassType(rootClass)
       val constructorDef = constructors.getOrElseUpdate(rootClassType, liftClass(rootClass))
+
       classDefToClassType(constructorDef).asInstanceOf[CaseClassType]
 
     case _ =>
       val constructorDef = constructors.getOrElseUpdate(tpe, liftPrimitive(tpe))
+
       classDefToClassType(constructorDef).asInstanceOf[CaseClassType]
   }
 
@@ -95,8 +101,7 @@ class Any1Ops(ctx: LeonContext, program: Program) {
   }
 
   def liftClass(cd: ClassDef): CaseClassDef = {
-    val constructor     = CaseClassDef(FreshIdentifier("Any1$" + cd.id.name), Seq(), Some(Any1ClassType), false).setPos(cd)
-    val liftType = classDefToClassType(constructor, Seq())
+    val constructor  = CaseClassDef(FreshIdentifier("Any1$" + cd.id.name), Seq(), Some(Any1ClassType), false).setPos(cd)
 
     val valueType = classDefToClassType(cd)
     val valueId   = FreshIdentifier("value", valueType).setPos(cd)
@@ -105,7 +110,7 @@ class Any1Ops(ctx: LeonContext, program: Program) {
     constructor.setFields(Seq(field))
 
     registerChild(constructor)
-    constructors += classDefToClassType(cd) -> constructor
+    constructors += valueType -> constructor
 
     constructor
   }
@@ -113,7 +118,6 @@ class Any1Ops(ctx: LeonContext, program: Program) {
   def liftPrimitive(tpe: TypeTree): CaseClassDef = {
     val name        = typeName(tpe)
     val constructor = CaseClassDef(FreshIdentifier("Any1$" + name), Seq(), Some(Any1ClassType), false)
-    val liftedType  = classDefToClassType(constructor, Seq())
 
     val valueId   = FreshIdentifier("value", tpe)
     val field     = ValDef(valueId)
