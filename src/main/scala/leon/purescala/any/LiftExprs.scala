@@ -24,12 +24,12 @@ class LiftExprs(Any1Ops: Any1Ops) extends TransformationPhase {
 
   object LiftExprTransformer extends TransformerWithType {
 
-    def liftExpr(expr: Expr, tpe: TypeTree = Any1Ops.Any1ClassType, ifNeeded: Boolean = true): Expr =
-      if (ifNeeded && needsWrapper(expr, tpe)) Any1Ops.lift(expr)
+    def liftExpr(expr: Expr, tpe: TypeTree = Any1Ops.Any1ClassType): Expr =
+      if (needsWrapper(expr, tpe)) Any1Ops.lift(expr)
       else expr
 
     def needsWrapper(expr: Expr, tpe: TypeTree): Boolean =
-      Any1Ops.isAny(tpe) && !Any1Ops.isAny1(expr.getType)
+      Any1Ops.isAny(tpe) && !Any1Ops.isAny(expr.getType)
 
     override
     def transformType(tpe: TypeTree): TypeTree =
