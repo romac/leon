@@ -25,10 +25,10 @@ class LiftExprs(Any1Ops: Any1Ops) extends TransformationPhase {
   object LiftExprTransformer extends TransformerWithType {
 
     def liftExpr(expr: Expr, tpe: TypeTree = Any1Ops.Any1ClassType, ifNeeded: Boolean = true): Expr =
-      if (ifNeeded && needswrapper(expr, tpe)) Any1Ops.lift(expr)
+      if (ifNeeded && needsWrapper(expr, tpe)) Any1Ops.lift(expr)
       else expr
 
-    def needswrapper(expr: Expr, tpe: TypeTree): Boolean =
+    def needsWrapper(expr: Expr, tpe: TypeTree): Boolean =
       Any1Ops.isAny(tpe) && !Any1Ops.isAny1(expr.getType)
 
     override
@@ -37,6 +37,7 @@ class LiftExprs(Any1Ops: Any1Ops) extends TransformationPhase {
 
     override
     def transformPattern(pat: Pattern, scrutTpe: TypeTree): Pattern = (pat match {
+
       case InstanceOfPattern(binder, ct) if Any1Ops.isAny(scrutTpe) || Any1Ops.isUntyped(scrutTpe) =>
         val wrapperTpe = Any1Ops.liftType(ct)
         CaseClassPattern(None, wrapperTpe, Seq(pat))
@@ -64,11 +65,11 @@ class LiftExprs(Any1Ops: Any1Ops) extends TransformationPhase {
         CaseClassPattern(None, wrapperTpe, Seq(newPat))
 
       case TuplePattern(binder, subPats) if Any1Ops.isAny(scrutTpe) =>
-        val patType     = patternType(pat)
-        val wrapperType = Any1Ops.liftType(patType)
-        val newPat      = transformPattern(pat, patType)
+        val patType    = patternType(pat)
+        val wrapperTpe = Any1Ops.liftType(patType)
+        val newPat     = transformPattern(pat, patType)
 
-        CaseClassPattern(None, wrapperType, Seq(newPat)).copiedFrom(pat)
+        CaseClassPattern(None, wrapperTpe, Seq(newPat)).copiedFrom(pat)
 
       case TuplePattern(binder, subPats) =>
         val newBinder      = binder map transformIdentifier
@@ -78,12 +79,10 @@ class LiftExprs(Any1Ops: Any1Ops) extends TransformationPhase {
 
       case WildcardPattern(binder) =>
         val newBinder = binder map transformIdentifier
-
         WildcardPattern(newBinder)
 
       case LiteralPattern(binder, lit) if Any1Ops.isAny(scrutTpe) =>
         val wrapperTpe = Any1Ops.liftType(lit.getType)
-
         CaseClassPattern(None, wrapperTpe, Seq(pat))
 
       case _ =>
