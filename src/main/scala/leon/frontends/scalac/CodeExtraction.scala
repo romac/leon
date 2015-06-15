@@ -1438,6 +1438,9 @@ trait CodeExtraction extends ASTExtractors {
             case (IsTyped(_, rt), IsTyped(_, lt)) if isSubtypeOf(rt, lt) || isSubtypeOf(lt, rt) =>
               Equals(rl, rr)
 
+            case (IsTyped(_, rt), IsTyped(_, lt)) if rt == AnyType || lt == AnyType =>
+              Equals(rl, rr)
+
             case (IntLiteral(v), IsTyped(_, IntegerType)) =>
               Equals(InfiniteIntegerLiteral(v), rr)
 

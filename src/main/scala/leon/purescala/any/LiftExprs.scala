@@ -104,6 +104,14 @@ class LiftExprs(Any1Ops: Any1Ops) extends TransformationPhase {
 
         liftExpr(newExpr, tpe)
 
+      case Equals(l, r) =>
+        val lhs = transform(l)
+        val rhs = transform(r)
+
+        Equals(liftExpr(lhs, r.getType),
+               liftExpr(rhs, l.getType))
+          .copiedFrom(expr)
+
       case _ =>
         val newExpr = super.transform(expr, tpe)
 
