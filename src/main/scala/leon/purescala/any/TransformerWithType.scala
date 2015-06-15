@@ -67,8 +67,13 @@ abstract class TransformerWithType extends Transformer {
         val newId = transformIdentifier(id)
         if (newId == id) v else Variable(id)
 
-      case t: Terminal =>
-        t
+      case Ensuring(body, pred) =>
+        val newBody = transform(body, tpe)
+        val newPred = transform(pred)
+
+        Ensuring(newBody, newPred)
+
+      case t: Terminal => t
 
       case UnaryOperator(e, builder) =>
         builder(transform(e))
