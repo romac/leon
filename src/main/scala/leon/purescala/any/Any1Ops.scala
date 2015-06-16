@@ -28,7 +28,7 @@ trait AnyDefs { self: Any1Ops =>
   lazy val Any1ModuleDef: ModuleDef = {
     Any1ClassDef.registerChildren(UnexpectedDef)
     val classDefs = UnexpectedDef +: allConstructors
-    ModuleDef(FreshIdentifier("any1constructor"), classDefs, false)
+    ModuleDef(FreshIdentifier("any1"), classDefs, false)
   }
 
 }
