@@ -112,12 +112,18 @@ class LiftExprs(Any1Ops: Any1Ops) extends TransformationPhase {
                liftExpr(rhs, l.getType))
           .copiedFrom(expr)
 
-      case _: Ensuring =>
-        super.transform(expr, tpe)
+      case Ensuring(body, pred) =>
+        Ensuring(transform(body, tpe),
+                 transform(pred))
+          .copiedFrom(expr)
+
+      case Require(pred, body) =>
+        Require(transform(pred),
+                transform(body, tpe))
+          .copiedFrom(expr)
 
       case _ =>
         val newExpr = super.transform(expr, tpe)
-
         liftExpr(newExpr, tpe)
     }
   }
