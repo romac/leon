@@ -76,15 +76,35 @@ object ListReverse {
 
   }
 
-  def reverse(lst: Any): Any = {
-    require(lst.isInstanceOf[ListA])
-    if (lst == NilA()) NilA()
-    else reverse(lst.tail) ++ ConsA(lst.head, NilA())
-  } ensuring { _.contents == lst.contents }
+  def reverse(l: Any) : Any = {
+    require(l.isInstanceOf[ListA])
+    reverse0(l, NilA())
+  } ensuring(_.contents == l.contents)
+
+  def reverse0(l1: Any, l2: Any) : Any = {
+    require(l1.isInstanceOf[ListA] && l2.isInstanceOf[ListA])
+    l1 match {
+      case NilA() => l2
+      case ConsA(x, xs) =>
+        val list2 = l2 match { case x: ListA => x }
+        reverse0(xs, ConsA(x, list2))
+    }
+  } ensuring(_.contents == l1.contents ++ l2.contents)
 
   def reverseReverseEqIdentity(lst: Any) = {
     require(lst.isInstanceOf[ListA])
     reverse(reverse(lst)) == lst
+  }.holds
+
+  def reverse2(lst: Any): Any = {
+    require(lst.isInstanceOf[ListA])
+    if (lst == NilA()) lst
+    else reverse2(lst.tail) ++ ConsA(lst.head, NilA())
+  } ensuring { _.contents == lst.contents }
+
+  def reverse2Reverse2EqIdentity(lst: Any) = {
+    require(lst.isInstanceOf[ListA])
+    reverse2(reverse2(lst)) == lst
   }.holds
 
 }
