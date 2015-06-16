@@ -23,9 +23,9 @@ object ListReverse {
       case ConsA(_, t) => 1 + t.size
     } } ensuring { _ >= 0 }
 
-    def content: Set[Any] = this match {
+    def contents: Set[Any] = this match {
       case NilA()       => Set.empty[Any]
-      case ConsA(x, xs) => Set(x) ++ xs.content
+      case ConsA(x, xs) => Set(x) ++ xs.contents
     }
 
     def ++(other: ListA): ListA = { this match {
@@ -40,35 +40,35 @@ object ListReverse {
   implicit class AnyListOps(val value: Any) {
 
     def head: Any = {
-      // require(value.isInstanceOf[ListA])
+      require(value.isInstanceOf[ListA] && value != NilA())
       value match { case l: ListA =>
         l.head
       }
     }
 
     def tail: ListA = {
-      // require(value.isInstanceOf[ListA])
+      require(value.isInstanceOf[ListA] && value != NilA())
       value match { case l: ListA =>
         l.tail
       }
     }
 
     def size: BigInt = {
-      // require(value.isInstanceOf[ListA])
+      require(value.isInstanceOf[ListA])
       value match { case l: ListA =>
         l.size
       }
     }
 
-    def content: Set[Any] = {
-      // require(value.isInstanceOf[ListA])
+    def contents: Set[Any] = {
+      require(value.isInstanceOf[ListA])
       value match { case l: ListA =>
-        l.content
+        l.contents
       }
     }
 
     def ++(other: ListA): ListA = {
-      // require(value.isInstanceOf[ListA])
+      require(value.isInstanceOf[ListA])
       value match { case l: ListA =>
         l ++ other
       }
@@ -77,15 +77,13 @@ object ListReverse {
   }
 
   def reverse(lst: Any): Any = {
-    // require(lst.isInstanceOf[ListA])
-    lst match {
-      case NilA() => NilA()
-      case _      => reverse(lst.tail) ++ ConsA(lst.head, NilA())
-    }
-  } ensuring { _.size == lst.size }
+    require(lst.isInstanceOf[ListA])
+    if (lst == NilA()) NilA()
+    else reverse(lst.tail) ++ ConsA(lst.head, NilA())
+  } ensuring { _.contents == lst.contents }
 
   def reverseReverseEqIdentity(lst: Any) = {
-    // require(lst.isInstanceOf[ListA])
+    require(lst.isInstanceOf[ListA])
     reverse(reverse(lst)) == lst
   }.holds
 
